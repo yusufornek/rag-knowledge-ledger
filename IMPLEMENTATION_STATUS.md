@@ -129,12 +129,12 @@ completeness against the full specification, not as a v0.1.0 commitment.
 |---|---|---|---|
 | FR-080 | Build plan preview: source count, estimated parse/chunk/embed cost, resource caps | pending | - |
 | FR-081 | Pipeline stage artifact caching keyed by content/config hash | pending | - |
-| FR-082 | Same input/config/reproducible epoch produces a byte-identical canonical manifest | pending | - |
+| FR-082 | Same input/config/reproducible epoch produces a byte-identical canonical manifest | implemented | `ragledger.core.manifest.build_manifest`/`canonical_manifest_bytes`; `tests/core/test_canonical.py`, `tests/core/test_manifest.py::TestCanonicalBytesAndRoundtrip`, `tests/core/test_golden_manifests.py` |
 | FR-083 | Partial build manifest marked `incomplete`; policy fails on it by default | pending | - |
-| FR-084 | Manifest validated against its JSON Schema | drafted | `docs/spec/manifest-v1.schema.json` |
-| FR-085 | Manifest supports detached/embedded Ed25519 signature | pending | - |
-| FR-086 | Signature key id is the public key fingerprint; private key never in the manifest | pending | - |
-| FR-087 | Verify command checks hash, schema, signature, and optional deep artifact checksums | pending | - |
+| FR-084 | Manifest validated against its JSON Schema | implemented | `ragledger.core.manifest.validate_manifest_document`; `tests/core/test_manifest.py`, `tests/core/test_models.py`, `tests/core/test_golden_manifests.py` |
+| FR-085 | Manifest supports detached/embedded Ed25519 signature | implemented | `ragledger.core.signing.sign_manifest` attaches to the embedded `signatures[]` array (the `SignatureRecord` model also serializes standalone for a detached file); CLI-level detached-file conventions are M4 scope; `tests/core/test_signing.py` |
+| FR-086 | Signature key id is the public key fingerprint; private key never in the manifest | implemented | `ragledger.core.signing.fingerprint`; `tests/core/test_signing.py::TestRfc8032Vector`, `tests/core/test_signing.py::TestSignAndVerifyRoundtrip` |
+| FR-087 | Verify command checks hash, schema, signature, and optional deep artifact checksums | pending | Underlying primitives implemented and tested (`ragledger.core.signing.verify_manifest` for hash/signature, `ragledger.core.manifest.load_manifest` for schema, `ragledger.core.artifacts.ArtifactStore.verify` for artifact checksums); the CLI `verify` command assembling them is M4 scope |
 
 ### 8.10 Index target and snapshot
 
@@ -210,7 +210,7 @@ completeness against the full specification, not as a v0.1.0 commitment.
 | Milestone | Scope | Status |
 |---|---|---|
 | M0 | Foundation: repository scaffolding, CI, Compose, base docs, schema skeletons, threat model and test strategy | in progress |
-| M1 | Identity and manifest core: canonicalization, stable IDs, manifest schema, artifacts, signing/verify | pending |
+| M1 | Identity and manifest core: canonicalization, stable IDs, manifest schema, artifacts, signing/verify | done |
 | M2 | Source/parse/chunk pipeline: discovery, Docling/native parsers in a sandbox, structural artifacts, chunkers, caching | pending |
 | M3 | Governance and embedding: local embeddings, PII, SPDX, ACL/tenant assertions, policy facts | pending |
 | M4 | CLI build/report: standalone build, validate/sign/verify, JSON/HTML reporting | pending |
