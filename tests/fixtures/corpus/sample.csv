@@ -1,0 +1,4 @@
+region,contact_email,notes
+eu,eu-team@example.com,Primary EU escalation contact
+us,us-team@example.com,Primary US escalation contact
+apac,apac-team@example.com,Primary APAC escalation contact

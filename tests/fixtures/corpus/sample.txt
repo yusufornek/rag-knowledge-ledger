@@ -1,0 +1,17 @@
+RAG Knowledge Ledger sample document.
+
+This plain text file exercises the native text parser and the built-in
+chunkers with unstructured paragraph content, padded out with a few
+extra sentences so a small configured chunk size actually produces more
+than one chunk during tests.
+
+For automated PII detector tests, a synthetic contact address is used:
+canary.leaktest@example.com. This address is fictional and does not
+correspond to a real mailbox.
+
+A synthetic phone number for the same purpose is 555-010-1199, a North
+American reserved fictional exchange never assigned to a real line.
+
+Final paragraph confirms the document has more than one section, so
+chunk boundaries and overlap behavior have real content to operate on
+during tests.

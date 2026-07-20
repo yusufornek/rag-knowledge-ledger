@@ -1,0 +1,6 @@
+SPDX-License-Identifier: Apache-2.0
+
+This plain text source declares its license through an explicit SPDX
+header line instead of Markdown frontmatter, so it exercises the
+ragledger.governance.license SPDX-License-Identifier header detection
+path independently from the frontmatter path.

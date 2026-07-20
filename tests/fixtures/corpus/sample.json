@@ -1,0 +1,17 @@
+[
+  {
+    "id": 1,
+    "kind": "customer_note",
+    "text": "Synthetic Turkish national identifier for detector testing: 10000000146"
+  },
+  {
+    "id": 2,
+    "kind": "customer_note",
+    "text": "No sensitive content in this record."
+  },
+  {
+    "id": 3,
+    "kind": "customer_note",
+    "text": "Escalation contact escalations@example.com for record three."
+  }
+]
