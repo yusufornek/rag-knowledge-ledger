@@ -1,0 +1,778 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ragledger.dev/schemas/manifest-v1.json",
+  "title": "RAG Ledger Manifest v1",
+  "description": "Content-addressed lineage manifest for a RAG knowledge base, as defined in PROJECT_SPEC.md sections 7 and 33. This schema is a design artifact produced ahead of the manifest-building code (milestone M0); it has not yet been wired into any builder or validator.",
+  "type": "object",
+  "required": [
+    "schema",
+    "media_type",
+    "manifest_version",
+    "created_at",
+    "ledger_version",
+    "namespace",
+    "build",
+    "sources",
+    "parse_runs",
+    "chunks",
+    "embeddings",
+    "index_bindings",
+    "assertions",
+    "artifacts",
+    "statistics",
+    "integrity",
+    "signatures"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "https://ragledger.dev/schemas/manifest-v1.json"
+    },
+    "media_type": {
+      "const": "application/vnd.ragledger.manifest.v1+json"
+    },
+    "manifest_version": {
+      "const": "1.0"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Included in the normative signing view; see docs/architecture/adr/0002-signing-algorithm.md and PROJECT_SPEC.md section 33.1."
+    },
+    "ledger_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Version of the ragledger software that produced this manifest."
+    },
+    "namespace": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Workspace/knowledge-base namespace this manifest belongs to."
+    },
+    "build": { "$ref": "#/$defs/buildRecord" },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/sourceRecord" }
+    },
+    "parse_runs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/parseRecord" }
+    },
+    "chunks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/chunkRecord" }
+    },
+    "embeddings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/embeddingRecord" }
+    },
+    "index_bindings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/indexBinding" }
+    },
+    "assertions": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/assertion" }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifactRef" }
+    },
+    "statistics": { "$ref": "#/$defs/statistics" },
+    "integrity": { "$ref": "#/$defs/integrity" },
+    "signatures": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/signatureRecord" }
+    },
+    "extensions": {
+      "type": "object",
+      "description": "Namespace for forward-compatible extension fields not defined by manifest v1."
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Portable, content-derived identifier."
+    },
+    "sha256Hash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "relativeUri": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:)(?!\\\\)(?!.*\\.\\.).+$",
+      "description": "Namespace-relative source URI (for example file:documents/refund.pdf). Never an absolute local path, Windows drive letter, or UNC path, per PROJECT_SPEC.md section 33.2."
+    },
+    "warning": {
+      "type": "object",
+      "required": ["code"],
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Z0-9_]*$",
+          "description": "Stable, bounded warning code."
+        },
+        "message": { "type": "string" },
+        "context": { "type": "object" }
+      }
+    },
+    "buildRecord": {
+      "type": "object",
+      "required": [
+        "build_id",
+        "status",
+        "source_snapshot_hash",
+        "pipeline_config_hash",
+        "started_at",
+        "completed_at",
+        "environment",
+        "stages",
+        "warnings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "build_id": { "$ref": "#/$defs/id" },
+        "status": {
+          "type": "string",
+          "enum": ["complete", "incomplete", "cancelled"]
+        },
+        "source_snapshot_hash": { "$ref": "#/$defs/sha256Hash" },
+        "pipeline_config_hash": { "$ref": "#/$defs/sha256Hash" },
+        "started_at": { "type": "string", "format": "date-time" },
+        "completed_at": { "type": "string", "format": "date-time" },
+        "environment": {
+          "type": "object",
+          "required": ["python_version"],
+          "additionalProperties": false,
+          "properties": {
+            "os": { "type": "string" },
+            "image_digest": { "type": "string" },
+            "python_version": { "type": "string" },
+            "package_lock_hash": { "$ref": "#/$defs/sha256Hash" }
+          }
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "version"],
+            "additionalProperties": false,
+            "properties": {
+              "name": { "type": "string", "minLength": 1 },
+              "version": { "type": "string", "minLength": 1 },
+              "config_hash": { "$ref": "#/$defs/sha256Hash" },
+              "input_count": { "type": "integer", "minimum": 0 },
+              "output_count": { "type": "integer", "minimum": 0 }
+            }
+          }
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/warning" }
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "sourceRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "version_id",
+        "namespace",
+        "uri",
+        "media_type",
+        "size_bytes",
+        "content_hash",
+        "source_system",
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "version_id": { "$ref": "#/$defs/id" },
+        "namespace": { "type": "string", "minLength": 1 },
+        "uri": { "$ref": "#/$defs/relativeUri" },
+        "media_type": { "type": "string", "minLength": 1 },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "content_hash": { "$ref": "#/$defs/sha256Hash" },
+        "modified_at": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Informational only; not part of content identity."
+        },
+        "discovered_by": { "type": "string" },
+        "source_system": { "type": "string", "minLength": 1 },
+        "status": { "type": "string", "enum": ["active", "tombstone"] },
+        "declared_tenant": { "type": "string" },
+        "declared_acl_assertion_id": { "$ref": "#/$defs/id" },
+        "license_assertion_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "default": []
+        },
+        "raw_artifact_ref": {
+          "$ref": "#/$defs/id",
+          "description": "References an entry in the top-level artifacts array by artifact_id."
+        },
+        "relationships": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["type", "target_version_id"],
+            "additionalProperties": false,
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["duplicate_of", "supersedes", "renamed_from"]
+              },
+              "target_version_id": { "$ref": "#/$defs/id" }
+            }
+          },
+          "default": []
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "parseRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "source_version_id",
+        "parser_name",
+        "parser_version",
+        "status",
+        "duration_seconds",
+        "parsed_artifact_ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source_version_id": { "$ref": "#/$defs/id" },
+        "parser_name": { "type": "string", "minLength": 1 },
+        "parser_version": { "type": "string", "minLength": 1 },
+        "container_digest": { "type": "string" },
+        "config_hash": { "$ref": "#/$defs/sha256Hash" },
+        "config_redacted": {
+          "type": "object",
+          "description": "Secret-free echo of the parser configuration used."
+        },
+        "ocr": {
+          "type": "object",
+          "required": ["enabled"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "engine": { "type": "string" },
+            "model": { "type": "string" },
+            "languages": {
+              "type": "array",
+              "items": { "type": "string" }
+            }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["success", "partial", "fail"]
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/warning" },
+          "default": []
+        },
+        "parsed_artifact_ref": { "$ref": "#/$defs/id" },
+        "duration_seconds": { "type": "number", "minimum": 0 },
+        "extensions": { "type": "object" }
+      }
+    },
+    "structuralLocator": {
+      "type": "object",
+      "required": ["kind", "ordinal"],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Locator variant. document_span is the v1-defined kind; other kinds may be introduced under extensions in future revisions."
+        },
+        "page_start": { "type": "integer", "minimum": 1 },
+        "page_end": { "type": "integer", "minimum": 1 },
+        "heading_path": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "element_ids": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "character_start": { "type": "integer", "minimum": 0 },
+        "character_end": { "type": "integer", "minimum": 0 },
+        "ordinal": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Disambiguates repeated headings/locators within the same document."
+        }
+      }
+    },
+    "chunkRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "source_version_id",
+        "parse_run_id",
+        "locator",
+        "raw_hash",
+        "contextualized_hash",
+        "token_count",
+        "tokenizer"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "source_version_id": { "$ref": "#/$defs/id" },
+        "parse_run_id": { "$ref": "#/$defs/id" },
+        "locator": { "$ref": "#/$defs/structuralLocator" },
+        "raw_hash": { "$ref": "#/$defs/sha256Hash" },
+        "contextualized_hash": { "$ref": "#/$defs/sha256Hash" },
+        "token_count": { "type": "integer", "minimum": 0 },
+        "tokenizer": {
+          "type": "object",
+          "required": ["name", "revision"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "revision": { "type": "string", "minLength": 1 }
+          }
+        },
+        "text_artifact_ref": { "$ref": "#/$defs/id" },
+        "neighbor_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "default": []
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "heading_path": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "table_caption": { "type": "string" },
+            "custom": {
+              "type": "object",
+              "description": "User-defined metadata namespace; reserved keys listed in PROJECT_SPEC.md section 33.4 are not permitted here."
+            }
+          }
+        },
+        "pii_assertion_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "default": []
+        },
+        "license_assertion_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "default": []
+        },
+        "acl_assertion_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "default": []
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "embeddingRecord": {
+      "type": "object",
+      "required": [
+        "id",
+        "chunk_id",
+        "model",
+        "dimension",
+        "dtype",
+        "contextualized_hash",
+        "generated_at"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "chunk_id": { "$ref": "#/$defs/id" },
+        "model": {
+          "type": "object",
+          "required": ["provider", "name", "revision"],
+          "additionalProperties": false,
+          "properties": {
+            "provider": { "type": "string", "minLength": 1 },
+            "name": { "type": "string", "minLength": 1 },
+            "revision": { "type": "string", "minLength": 1 }
+          }
+        },
+        "dimension": { "type": "integer", "minimum": 1 },
+        "dtype": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "For example float32, float16."
+        },
+        "normalization": {
+          "type": "string",
+          "enum": ["none", "l2"],
+          "default": "none"
+        },
+        "distance_expectation": {
+          "type": "string",
+          "enum": ["cosine", "dot", "euclidean", "manhattan"]
+        },
+        "contextualized_hash": { "$ref": "#/$defs/sha256Hash" },
+        "vector_hash": { "$ref": "#/$defs/sha256Hash" },
+        "generated_at": { "type": "string", "format": "date-time" },
+        "usage": {
+          "type": "object",
+          "description": "Adapter-specific usage metadata (for example input token count, batch size)."
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "indexBinding": {
+      "type": "object",
+      "required": [
+        "id",
+        "target",
+        "namespace",
+        "point_id",
+        "embedding_id",
+        "expected_payload_hash"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Target alias; never a connection URL or credential."
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Target collection or table name."
+        },
+        "point_id": {
+          "description": "Canonical point identifier; string/number preserved for Qdrant (FR-104), canonical JSON for composite pgvector primary keys (FR-115).",
+          "anyOf": [
+            { "type": "string" },
+            { "type": "integer" },
+            { "type": "array" },
+            { "type": "object" }
+          ]
+        },
+        "embedding_id": { "$ref": "#/$defs/id" },
+        "expected_payload_hash": { "$ref": "#/$defs/sha256Hash" },
+        "expected_payload_projection": {
+          "type": "object",
+          "description": "Expected mapped payload field values, keyed by target field name."
+        },
+        "tenant_projection": {},
+        "acl_projection": {},
+        "write_status": {
+          "type": "string",
+          "enum": ["pending", "written", "unknown"]
+        },
+        "write_receipt": {
+          "type": "object",
+          "description": "Present only when the build instrumented an actual write."
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "artifactRef": {
+      "type": "object",
+      "required": [
+        "artifact_id",
+        "media_type",
+        "sha256",
+        "size_bytes",
+        "compression",
+        "encryption",
+        "locator",
+        "sensitivity"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": { "$ref": "#/$defs/id" },
+        "media_type": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256Hash" },
+        "size_bytes": { "type": "integer", "minimum": 0 },
+        "compression": {
+          "type": "string",
+          "enum": ["none", "gzip", "zstd"]
+        },
+        "encryption": {
+          "type": "string",
+          "enum": ["none", "server_managed"]
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Relative or logical object locator; never a signed URL or embedded credential."
+        },
+        "sensitivity": {
+          "type": "string",
+          "enum": ["public", "internal", "sensitive", "restricted"]
+        }
+      }
+    },
+    "assertion": {
+      "oneOf": [
+        { "$ref": "#/$defs/piiScanAssertion" },
+        { "$ref": "#/$defs/licenseAssertion" },
+        { "$ref": "#/$defs/aclAssertion" },
+        { "$ref": "#/$defs/tenantAssertion" },
+        { "$ref": "#/$defs/qualityAssertion" }
+      ]
+    },
+    "piiScanAssertion": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "subject_ref",
+        "created_at",
+        "scanner",
+        "status",
+        "findings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "const": "PII_SCAN" },
+        "subject_ref": {
+          "$ref": "#/$defs/id",
+          "description": "chunk_id or source_version_id the scan was run against."
+        },
+        "created_at": { "type": "string", "format": "date-time" },
+        "scanner": {
+          "type": "object",
+          "required": ["name", "version"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "minLength": 1 },
+            "version": { "type": "string", "minLength": 1 },
+            "language": { "type": "string" },
+            "config_hash": { "$ref": "#/$defs/sha256Hash" }
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": ["no_findings_detected", "findings_detected"],
+          "description": "no_findings_detected is never reported as a guarantee of cleanliness, per FR-055."
+        },
+        "findings": {
+          "type": "array",
+          "description": "Never contains a raw PII value, per FR-052 and PROJECT_SPEC.md section 12.1.",
+          "items": {
+            "type": "object",
+            "required": [
+              "entity_type",
+              "confidence",
+              "start",
+              "end",
+              "recognizer_id",
+              "recognizer_version"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "entity_type": { "type": "string", "minLength": 1 },
+              "confidence": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "start": { "type": "integer", "minimum": 0 },
+              "end": { "type": "integer", "minimum": 0 },
+              "masked_preview": { "type": "string" },
+              "value_hmac": { "$ref": "#/$defs/sha256Hash" },
+              "recognizer_id": { "type": "string", "minLength": 1 },
+              "recognizer_version": { "type": "string", "minLength": 1 }
+            }
+          }
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "licenseAssertion": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "subject_ref",
+        "created_at",
+        "spdx_expression",
+        "method"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "const": "LICENSE" },
+        "subject_ref": { "$ref": "#/$defs/id" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "spdx_expression": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Valid SPDX license expression, or the literal NOASSERTION."
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "user_assertion",
+            "frontmatter",
+            "sidecar",
+            "path_rule",
+            "repository_default"
+          ]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "license_list_version": {
+          "type": "string",
+          "description": "SPDX license list snapshot version used to validate the expression."
+        },
+        "conflicting_assertion_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/id" },
+          "default": []
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "aclAssertion": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "subject_ref",
+        "created_at",
+        "acl_hash",
+        "entries"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "const": "ACL" },
+        "subject_ref": { "$ref": "#/$defs/id" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "acl_hash": { "$ref": "#/$defs/sha256Hash" },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(PUBLIC|USER:.+|GROUP:.+|ROLE:.+|ATTRIBUTE:[^=]+=.+)$"
+          },
+          "description": "Canonical typed ACL entries per PROJECT_SPEC.md section 12.3. Deny entries are not supported in v1."
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "tenantAssertion": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "subject_ref",
+        "created_at",
+        "tenant_hash",
+        "tenant_key",
+        "tenant_value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "const": "TENANT" },
+        "subject_ref": { "$ref": "#/$defs/id" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "tenant_hash": { "$ref": "#/$defs/sha256Hash" },
+        "tenant_key": { "type": "string", "minLength": 1 },
+        "tenant_value": { "type": "string", "minLength": 1 },
+        "extensions": { "type": "object" }
+      }
+    },
+    "qualityAssertion": {
+      "type": "object",
+      "required": [
+        "id",
+        "type",
+        "subject_ref",
+        "created_at",
+        "warnings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "type": { "const": "QUALITY" },
+        "subject_ref": { "$ref": "#/$defs/id" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "warnings": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/warning" }
+        },
+        "extensions": { "type": "object" }
+      }
+    },
+    "statistics": {
+      "type": "object",
+      "required": [
+        "source_count",
+        "chunk_count",
+        "embedding_count",
+        "index_binding_count",
+        "assertion_count",
+        "artifact_count"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_count": { "type": "integer", "minimum": 0 },
+        "source_version_count": { "type": "integer", "minimum": 0 },
+        "parse_run_count": { "type": "integer", "minimum": 0 },
+        "chunk_count": { "type": "integer", "minimum": 0 },
+        "embedding_count": { "type": "integer", "minimum": 0 },
+        "index_binding_count": { "type": "integer", "minimum": 0 },
+        "assertion_count": { "type": "integer", "minimum": 0 },
+        "artifact_count": { "type": "integer", "minimum": 0 },
+        "warning_count": { "type": "integer", "minimum": 0 },
+        "extensions": { "type": "object" }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "required": ["canonicalization", "hash_algorithm", "manifest_hash"],
+      "additionalProperties": false,
+      "properties": {
+        "canonicalization": { "const": "RFC8785" },
+        "hash_algorithm": { "const": "sha256" },
+        "manifest_hash": { "$ref": "#/$defs/sha256Hash" }
+      }
+    },
+    "signatureRecord": {
+      "type": "object",
+      "required": ["algorithm", "key_id", "signature", "signed_at"],
+      "additionalProperties": false,
+      "properties": {
+        "algorithm": { "const": "Ed25519" },
+        "key_id": {
+          "$ref": "#/$defs/sha256Hash",
+          "description": "SHA-256 fingerprint of the Ed25519 public key."
+        },
+        "signature": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$",
+          "description": "base64url-encoded signature bytes, no padding."
+        },
+        "signed_at": { "type": "string", "format": "date-time" },
+        "issuer": { "type": "string" }
+      }
+    }
+  }
+}

@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ragledger.dev/schemas/policy-v1.json",
+  "title": "RAG Ledger Policy v1",
+  "description": "Typed policy configuration schema, derived from PROJECT_SPEC.md sections 8.14 (FR-130..FR-135), 9 (reconciliation taxonomy), 12.4 (policy example), and 14.4 (ratios). Unknown keys are a hard error (FR-130), so every object below sets additionalProperties to false. This schema is a design artifact produced ahead of the policy evaluation code (milestone M0); it is not yet enforced by any CLI command.",
+  "type": "object",
+  "required": ["version", "name", "requirements", "findings"],
+  "additionalProperties": false,
+  "properties": {
+    "version": { "const": 1 },
+    "name": { "type": "string", "minLength": 1 },
+    "requirements": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "manifest_signature": {
+          "type": "string",
+          "enum": ["required", "optional"]
+        },
+        "full_snapshot": {
+          "type": "string",
+          "enum": ["required", "optional"]
+        },
+        "lineage_coverage_min": { "$ref": "#/$defs/ratio" }
+      }
+    },
+    "findings": {
+      "type": "object",
+      "required": ["fail_on_severity"],
+      "additionalProperties": false,
+      "properties": {
+        "fail_on_severity": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/severity" },
+          "uniqueItems": true,
+          "minItems": 1
+        },
+        "warn_on_severity": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/severity" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "pii": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deny": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "description": "PII entity types (for example CREDIT_CARD, US_SSN) that must never appear in indexed content."
+        },
+        "allow": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "max_confidence_allowed": { "$ref": "#/$defs/ratio" }
+      }
+    },
+    "licenses": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "allow": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "description": "SPDX identifiers or expressions permitted for indexed sources."
+        },
+        "deny": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "unknown": {
+          "type": "string",
+          "enum": ["fail", "warn", "allow"],
+          "description": "Behavior when a source has no resolvable license assertion (NOASSERTION)."
+        }
+      }
+    },
+    "access": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "acl_required": { "type": "boolean" },
+        "tenant_required": { "type": "boolean" },
+        "acl_compliance_min": { "$ref": "#/$defs/ratio" }
+      }
+    },
+    "drift": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "stale_ratio_max": { "$ref": "#/$defs/ratio" },
+        "orphan_ratio_max": { "$ref": "#/$defs/ratio" },
+        "missing_ratio_max": { "$ref": "#/$defs/ratio" }
+      }
+    },
+    "rules": {
+      "type": "array",
+      "description": "Additional typed rules per FR-131 (count/ratio, severity, source path/media/license/PII/ACL/tenant, age, completeness), beyond the convenience blocks above.",
+      "items": { "$ref": "#/$defs/rule" }
+    }
+  },
+  "$defs": {
+    "ratio": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "severity": {
+      "type": "string",
+      "enum": ["critical", "high", "medium", "low"]
+    },
+    "taxonomyCode": {
+      "type": "string",
+      "enum": [
+        "MISSING_IN_INDEX",
+        "ORPHAN_IN_INDEX",
+        "STALE_SOURCE",
+        "STALE_PARSE",
+        "STALE_CHUNKING",
+        "EMBEDDING_MODEL_MISMATCH",
+        "EMBEDDING_DIMENSION_MISMATCH",
+        "VECTOR_HASH_MISMATCH",
+        "PAYLOAD_DRIFT",
+        "SOURCE_METADATA_MISSING",
+        "DUPLICATE_POINT_ID",
+        "DUPLICATE_CONTENT",
+        "ACL_MISSING",
+        "ACL_BROADER_THAN_SOURCE",
+        "ACL_MISMATCH",
+        "TENANT_MISSING",
+        "TENANT_MISMATCH",
+        "PII_POLICY_VIOLATION",
+        "LICENSE_UNKNOWN",
+        "LICENSE_POLICY_VIOLATION",
+        "UNVERIFIABLE_POINT",
+        "TARGET_SCHEMA_DRIFT",
+        "MANIFEST_INCOMPLETE",
+        "SNAPSHOT_INCOMPLETE"
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "required": ["category", "verdict_on_violation"],
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": [
+            "count",
+            "ratio",
+            "severity",
+            "source_path",
+            "media_type",
+            "license",
+            "pii",
+            "acl",
+            "tenant",
+            "age",
+            "completeness"
+          ]
+        },
+        "taxonomy_codes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/taxonomyCode" },
+          "uniqueItems": true,
+          "description": "Restricts the rule to specific reconciliation finding codes; omitted means all codes in the category."
+        },
+        "comparator": {
+          "type": "string",
+          "enum": ["lt", "lte", "gt", "gte", "eq"]
+        },
+        "threshold": { "type": "number" },
+        "pattern": {
+          "type": "string",
+          "description": "Used by source_path/media_type rules; a literal glob or regex depending on rule tooling, not evaluated by this schema."
+        },
+        "max_age_days": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Used by age rules."
+        },
+        "verdict_on_violation": {
+          "type": "string",
+          "enum": ["WARN", "FAIL"]
+        }
+      }
+    }
+  }
+}
