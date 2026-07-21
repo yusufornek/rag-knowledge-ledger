@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- pgvector schema inspection now reads the declared dimension of `vector`,
+  `halfvec`, and `sparsevec` columns correctly. The pgvector extension
+  stores the dimension directly in `atttypmod`, unlike varlena types that
+  add a 4-byte header offset, so a `vector(3)` column previously reported
+  dimension -1. Found by the live integration test suite against a real
+  pgvector instance.
+
 ## 0.1.1 - 2026-07-21
 
 ### Fixed

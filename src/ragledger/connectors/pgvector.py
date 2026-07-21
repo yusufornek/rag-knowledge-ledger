@@ -73,6 +73,10 @@ from ragledger.core.models import PointId
 
 __all__ = ["PgvectorConnector"]
 
+# pgvector extension type names whose atttypmod is the declared dimension
+# itself rather than a varlena length with the 4-byte header offset.
+_VECTOR_TYPE_NAMES = frozenset({"vector", "halfvec", "sparsevec"})
+
 # --------------------------------------------------------------------------
 # Section 42.2 mutation guard: statement whitelist
 # --------------------------------------------------------------------------
@@ -587,9 +591,11 @@ class PgvectorConnector(VectorTargetConnector[dict[str, Any]]):
         try:
             cursor.execute(
                 sql.SQL(
-                    "SELECT a.atttypmod AS atttypmod FROM pg_attribute a "
+                    "SELECT a.atttypmod AS atttypmod, t.typname AS typname "
+                    "FROM pg_attribute a "
                     "JOIN pg_class c ON a.attrelid = c.oid "
                     "JOIN pg_namespace n ON c.relnamespace = n.oid "
+                    "JOIN pg_type t ON a.atttypid = t.oid "
                     "WHERE n.nspname = %s AND c.relname = %s AND a.attname = %s "
                     "AND a.attnum > 0 AND NOT a.attisdropped"
                 ),
@@ -603,7 +609,11 @@ class PgvectorConnector(VectorTargetConnector[dict[str, Any]]):
         atttypmod = row.get("atttypmod")
         if atttypmod is None or atttypmod <= 0:
             return None
-        return int(atttypmod) - 4
+        if row.get("typname") in _VECTOR_TYPE_NAMES:
+            # pgvector stores the declared dimension directly in atttypmod,
+            # unlike varlena types which add a 4-byte VARHDRSZ offset.
+            return int(atttypmod)
+        return int(atttypmod) - 4 if int(atttypmod) > 4 else None
 
     def _fetch_index_names(self, connection: Any) -> tuple[str, ...]:
         cursor = _GuardedCursor(connection.cursor(row_factory=dict_row), connection)

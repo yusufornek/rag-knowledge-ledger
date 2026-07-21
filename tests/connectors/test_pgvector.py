@@ -102,7 +102,7 @@ class _FakeCursor:
         if "atttypmod" in text:
             if table.vector_dimension is None:
                 return []
-            return [{"atttypmod": table.vector_dimension + 4}]
+            return [{"atttypmod": table.vector_dimension, "typname": "vector"}]
         if "pg_index" in text:
             return [{"index_name": name} for name in table.index_names]
         if "to_regclass" in text:
@@ -637,7 +637,7 @@ def test_build_query_rejects_checkpoint_missing_primary_key_column() -> None:
 
 
 def test_fetch_vector_dimension_handles_non_positive_atttypmod() -> None:
-    table = _FakeTable(_rows(1), vector_dimension=-4)  # atttypmod resolves to 0
+    table = _FakeTable(_rows(1), vector_dimension=-1)  # unconstrained vector column
     connector, _ = _connector(table)
     schema = connector.inspect_target_schema()
     assert schema.vector_fields == ()
