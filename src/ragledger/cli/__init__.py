@@ -7,14 +7,12 @@ This package replaces the earlier single-module `ragledger.cli`;
 from. Every subcommand is implemented in `ragledger.cli.commands.*` and
 registered here; this module's only job is wiring, not command logic.
 
-Commands implemented this milestone (see `docs/reviews/m4-status-notes.md`
-for what is/isn't in scope): `init`, `build`, `manifest
-validate/sign/verify`, `key generate`, `target add`, `snapshot`, `report
-manifest/snapshot`, `version`. `reconcile`, `inspect`, `diff`, `doctor`,
-and `serve` from PROJECT_SPEC.md section 17.1's full command list are
-out of this milestone's scope -- `reconcile` in particular belongs to a
-concurrently developed `ragledger.reconcile` package this milestone must
-not touch -- and are not registered here.
+Commands implemented: `init`, `build`, `manifest validate/sign/verify`,
+`key generate`, `target add`, `snapshot`, `report manifest/snapshot`,
+`reconcile`, `version`. `inspect`, `diff`, `doctor`, and `serve` from
+PROJECT_SPEC.md section 17.1's full command list remain out of scope for
+this release -- see IMPLEMENTATION_STATUS.md's FR table and milestone
+plan for what M7/M8 add.
 """
 
 from __future__ import annotations
@@ -27,6 +25,7 @@ from ragledger.cli.commands import (
     init_cmd,
     key_cmd,
     manifest_cmd,
+    reconcile_cmd,
     report_cmd,
     snapshot_cmd,
     target_cmd,
@@ -64,6 +63,7 @@ app.add_typer(key_cmd.app, name="key")
 app.add_typer(target_cmd.app, name="target")
 app.command("snapshot")(snapshot_cmd.snapshot)
 app.add_typer(report_cmd.app, name="report")
+app.command("reconcile")(reconcile_cmd.reconcile)
 
 
 def main() -> None:
