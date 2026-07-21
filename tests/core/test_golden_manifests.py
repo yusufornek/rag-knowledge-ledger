@@ -18,7 +18,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import golden_fixtures as fixtures
+from tests.core import golden_fixtures as fixtures
 import pytest
 
 from ragledger.core.manifest import canonical_manifest_bytes
