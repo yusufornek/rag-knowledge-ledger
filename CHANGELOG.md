@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.1.1 - 2026-07-21
+
+### Fixed
+
+- Source discovery now accesses files through their original operating system
+  paths while keeping NFC-normalized identity paths. Discovery previously
+  failed with `FileNotFoundError` on non-normalizing filesystems (for example
+  ext4 on Linux) when a file name contained decomposed Unicode (NFD).
+
 ## 0.1.0 - 2026-07-21
 
 ### Added

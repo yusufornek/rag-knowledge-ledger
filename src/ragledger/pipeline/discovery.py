@@ -214,13 +214,17 @@ def _hash_streaming(path: Path) -> _HashResult:
 
 def _walk_files(
     root: Path, config: DiscoveryConfig, rules: Sequence[_IgnoreRule]
-) -> list[PurePosixPath]:
-    found: list[PurePosixPath] = []
+) -> list[tuple[PurePosixPath, Path]]:
+    # Pairs of (NFC-normalized identity path, original OS relative path). Identity,
+    # ignore matching and ordering use the NFC form; file access must use the
+    # original form because non-normalizing filesystems (ext4) store raw bytes.
+    found: list[tuple[PurePosixPath, Path]] = []
     for current_dir, dirnames, filenames in os.walk(root, followlinks=config.follow_symlinks):
         dirnames[:] = sorted(name for name in dirnames if name not in _ALWAYS_IGNORED_DIR_NAMES)
         for filename in sorted(filenames):
             absolute = Path(current_dir) / filename
-            relative_str = unicodedata.normalize("NFC", absolute.relative_to(root).as_posix())
+            os_relative = absolute.relative_to(root)
+            relative_str = unicodedata.normalize("NFC", os_relative.as_posix())
             if _is_ignored(relative_str, rules):
                 continue
             if absolute.is_symlink():
@@ -233,8 +237,8 @@ def _walk_files(
                     raise SymlinkEscapesRootError(
                         f"symlink {relative_str!r} resolves outside the discovery root"
                     ) from exc
-            found.append(PurePosixPath(relative_str))
-    return sorted(found, key=str)
+            found.append((PurePosixPath(relative_str), os_relative))
+    return sorted(found, key=lambda pair: str(pair[0]))
 
 
 def _build_source_record(
@@ -317,10 +321,10 @@ def discover_sources(
     config = config if config is not None else DiscoveryConfig()
     root = Path(root).resolve()
     rules = _read_ignore_rules(root)
-    relative_paths = _walk_files(root, config, rules)
+    pairs = _walk_files(root, config, rules)
     sources = [
-        _build_source_record(namespace, relative, root / relative, config)
-        for relative in relative_paths
+        _build_source_record(namespace, relative, root / os_relative, config)
+        for relative, os_relative in pairs
     ]
     return _attach_duplicate_relationships(sources)
 
