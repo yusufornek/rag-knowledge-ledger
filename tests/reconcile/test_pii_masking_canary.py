@@ -11,8 +11,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from tests.reconcile.builders import FIXED_TIME, Scenario, list_connector, make_scenario
-
 from ragledger.governance.pii import PiiScanConfig, build_pii_scan_assertion
 from ragledger.reconcile.engine import reconcile_small_data
 from ragledger.reconcile.policy import (
@@ -25,6 +23,7 @@ from ragledger.reconcile.policy import (
 from ragledger.reconcile.remediation import build_remediation_plan
 from ragledger.reconcile.report import ReconciliationReport, render_ci_summary, to_json_bytes
 from ragledger.reconcile.taxonomy import FindingCode
+from tests.reconcile.builders import FIXED_TIME, Scenario, list_connector, make_scenario
 
 RAW_SSN = "123-45-6787"
 RAW_EMAIL = "jane.doe@example.com"

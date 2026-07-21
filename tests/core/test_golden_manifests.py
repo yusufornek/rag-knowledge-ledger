@@ -18,11 +18,11 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tests.core import golden_fixtures as fixtures
 import pytest
 
 from ragledger.core.manifest import canonical_manifest_bytes
 from ragledger.core.models import ManifestEnvelope
+from tests.core import golden_fixtures as fixtures
 
 GOLDEN_DIR = Path(__file__).resolve().parent.parent / "fixtures" / "golden"
 

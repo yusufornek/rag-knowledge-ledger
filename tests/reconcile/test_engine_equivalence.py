@@ -12,10 +12,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from tests.reconcile.builders import SCOPE, TARGET, list_connector, make_bulk_dataset
-
 from ragledger.reconcile.engine import reconcile_big_data, reconcile_small_data
 from ragledger.reconcile.report import ReconciliationResult
+from tests.reconcile.builders import SCOPE, TARGET, list_connector, make_bulk_dataset
 
 
 def _fingerprint_severity_pairs(result: ReconciliationResult) -> list[tuple[str, str]]:

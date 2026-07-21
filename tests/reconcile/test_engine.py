@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from tests.reconcile.builders import list_connector, make_scenario
 
 from ragledger.reconcile.engine import reconcile_small_data
 from ragledger.reconcile.policy import (
@@ -14,6 +13,7 @@ from ragledger.reconcile.policy import (
     Requirements,
 )
 from ragledger.reconcile.taxonomy import FindingCode
+from tests.reconcile.builders import list_connector, make_scenario
 
 
 def _bare_policy(**overrides: object) -> PolicyDocument:

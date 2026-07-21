@@ -8,11 +8,11 @@ import time
 from pathlib import Path
 
 import pytest
-from tests.reconcile.builders import SCOPE, TARGET, list_connector, make_bulk_dataset
 
 from ragledger.reconcile import engine
 from ragledger.reconcile.engine import reconcile_big_data
 from ragledger.reconcile.taxonomy import FindingCode
+from tests.reconcile.builders import SCOPE, TARGET, list_connector, make_bulk_dataset
 
 
 def test_100k_points_bounded_memory_path_completes_within_budget(tmp_path: Path) -> None:

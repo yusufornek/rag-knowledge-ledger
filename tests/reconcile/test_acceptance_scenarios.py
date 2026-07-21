@@ -16,8 +16,6 @@ import re
 import tempfile
 from pathlib import Path
 
-from tests.reconcile.builders import list_connector, make_scenario, write_ndjson_snapshot
-
 from ragledger.reconcile.engine import reconcile_small_data
 from ragledger.reconcile.policy import (
     FindingsPolicy,
@@ -30,6 +28,7 @@ from ragledger.reconcile.policy import (
 from ragledger.reconcile.remediation import build_remediation_plan
 from ragledger.reconcile.report import ReconciliationReport, to_json_bytes
 from ragledger.reconcile.taxonomy import FindingCode
+from tests.reconcile.builders import list_connector, make_scenario, write_ndjson_snapshot
 
 
 def _fail_critical_high_policy(**overrides: object) -> PolicyDocument:

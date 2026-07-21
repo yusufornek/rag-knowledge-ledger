@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from tests.reconcile.builders import make_scenario
-
 from ragledger.reconcile.matching import (
     ExpectedPoint,
     MatchLevel,
     match_all_levels,
     normalize_point_id,
 )
+from tests.reconcile.builders import make_scenario
 
 
 def _expected_from_scenario(scenario) -> ExpectedPoint:
