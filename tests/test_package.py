@@ -8,7 +8,9 @@ draft 2020-12 documents.
 
 from __future__ import annotations
 
+import importlib.metadata
 import json
+import re
 from pathlib import Path
 
 import jsonschema
@@ -24,7 +26,8 @@ SCHEMA_DIR = REPO_ROOT / "docs" / "spec"
 
 
 def test_package_version() -> None:
-    assert ragledger.__version__ == "0.1.0"
+    assert re.fullmatch(r"\d+\.\d+\.\d+", ragledger.__version__)
+    assert ragledger.__version__ == importlib.metadata.version("ragledger")
 
 
 def test_package_exports_version_in_all() -> None:

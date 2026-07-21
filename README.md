@@ -29,7 +29,7 @@ what is explicitly out of scope for v0.1.0.
 
 ## Status
 
-v0.1.0. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the
+v0.1.1. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the
 full, requirement-by-requirement status against the project
 specification, and [CHANGELOG.md](CHANGELOG.md) for the release history.
 

@@ -1,6 +1,6 @@
 [project]
 name = "ragledger"
-version = "0.1.0"
+version = "0.1.1"
 description = "Lineage and integrity ledger for retrieval-augmented generation knowledge bases"
 readme = "README.md"
 license = { text = "Apache-2.0" }
