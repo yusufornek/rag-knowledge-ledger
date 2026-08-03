@@ -83,7 +83,11 @@ from ragledger.server.db.models.enums import (
     SnapshotStatus,
     VectorTargetType,
 )
-from ragledger.server.jobs import JobHandler, PermanentJobError
+from ragledger.server.jobs import (
+    JobHandler,
+    PermanentJobError,
+    check_cancellation,
+)
 from ragledger.server.security import decrypt_credential
 from ragledger.server.settings import Settings
 
@@ -107,6 +111,7 @@ JOB_TYPE_SNAPSHOT = "inventory_snapshot"
 JOB_TYPE_RECONCILE = "reconciliation"
 
 _SNAPSHOT_CONNECTOR_VERSION = "1"
+_CANCEL_CHECK_EVERY_POINTS = 500
 
 
 def _collection_root(collection: SourceCollection, settings: Settings) -> Path:
@@ -216,6 +221,9 @@ def run_build_job(session: Session, job: Job, *, settings: Settings) -> None:
     build.state = BuildState.RUNNING
     build.started_at = datetime.now(UTC)
     session.flush()
+    # The pipeline itself is one deterministic unit; cancellation is
+    # honored at its boundary, not between its internal stages.
+    check_cancellation(session, job)
 
     root = _collection_root(collection, settings)
     try:
@@ -404,6 +412,8 @@ def run_snapshot_job(session: Session, job: Job, *, settings: Settings) -> None:
         def _tracked_points() -> Iterator[NormalizedPoint]:
             nonlocal last_point_id, point_count
             for point in connector.iterate_points(checkpoint=None, include_vectors=False):
+                if point_count % _CANCEL_CHECK_EVERY_POINTS == 0:
+                    check_cancellation(session, job)
                 last_point_id = point.point_id
                 point_count += 1
                 yield point
@@ -504,6 +514,7 @@ def run_reconcile_job(session: Session, job: Job, *, settings: Settings) -> None
 
     reconciliation.state = ReconciliationState.RUNNING
     session.flush()
+    check_cancellation(session, job)
 
     envelope = load_manifest(_artifact_path(manifest_row.artifact_ref, settings))
 
@@ -627,4 +638,50 @@ def make_handlers(settings: Settings) -> dict[str, JobHandler]:
         JOB_TYPE_BUILD: lambda session, job: run_build_job(session, job, settings=settings),
         JOB_TYPE_SNAPSHOT: lambda session, job: run_snapshot_job(session, job, settings=settings),
         JOB_TYPE_RECONCILE: lambda session, job: run_reconcile_job(session, job, settings=settings),
+    }
+
+
+def _finalize_cancelled_build(session: Session, job: Job) -> None:
+    build = session.get(Build, job.payload.get("build_id"))
+    if build is not None and build.state in (BuildState.PENDING, BuildState.RUNNING):
+        build.state = BuildState.CANCELLED
+        build.completed_at = datetime.now(UTC)
+        session.flush()
+
+
+def _finalize_cancelled_snapshot(session: Session, job: Job) -> None:
+    snapshot = session.get(InventorySnapshot, job.payload.get("snapshot_id"))
+    if snapshot is not None and snapshot.status in (
+        SnapshotStatus.PENDING,
+        SnapshotStatus.RUNNING,
+    ):
+        snapshot.status = SnapshotStatus.CANCELLED
+        session.flush()
+
+
+def _finalize_cancelled_reconciliation(session: Session, job: Job) -> None:
+    reconciliation = session.get(Reconciliation, job.payload.get("reconciliation_id"))
+    if reconciliation is not None and reconciliation.state in (
+        ReconciliationState.PENDING,
+        ReconciliationState.RUNNING,
+    ):
+        reconciliation.state = ReconciliationState.CANCELLED
+        session.flush()
+
+
+def make_cancel_finalizers() -> dict[str, JobHandler]:
+    """Per-job-type cleanup run after a cooperative cancellation is honored.
+
+    A handler's in-flight writes roll back with the cancellation, so
+    the related entity would otherwise be left in its pre-run state;
+    these finalizers stamp the entity's own terminal `cancelled` status
+    in the same transaction that marks the job `CANCELLED` (section
+    21's cancellation contract: completed immutable artifacts remain,
+    the entity's status says cancelled, and an audit of the request was
+    already written by the `:cancel` endpoint).
+    """
+    return {
+        JOB_TYPE_BUILD: _finalize_cancelled_build,
+        JOB_TYPE_SNAPSHOT: _finalize_cancelled_snapshot,
+        JOB_TYPE_RECONCILE: _finalize_cancelled_reconciliation,
     }

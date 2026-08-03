@@ -178,6 +178,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # `get_db_session` from this module, so a top-level import would be
     # circular.
     from ragledger.server.api import api_router
+    from ragledger.server.api.events_routes import events_router
     from ragledger.server.api.manifest_routes import manifest_router
     from ragledger.server.api.pipeline_routes import pipeline_router
     from ragledger.server.api.problems import install_problem_handlers
@@ -188,6 +189,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(pipeline_router, prefix="/api/v1")
     app.include_router(manifest_router, prefix="/api/v1")
     app.include_router(reconcile_router, prefix="/api/v1")
+    app.include_router(events_router, prefix="/api/v1")
 
     @app.get("/healthz")
     def healthz(db: Session = Depends(get_db_session)) -> dict[str, Any]:  # noqa: B008

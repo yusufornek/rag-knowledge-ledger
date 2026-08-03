@@ -29,12 +29,13 @@ what is explicitly out of scope for v0.1.0.
 
 ## Status
 
-v0.1.1. See [CHANGELOG.md](CHANGELOG.md) for the release history.
+v0.2.0. See [CHANGELOG.md](CHANGELOG.md) for the release history.
 
 ## Features
 
-What v0.1.0 actually ships, as a CLI (`ragledger ...`) and a Python
-library (`import ragledger`):
+What this release ships, as a CLI (`ragledger ...`), a Python library
+(`import ragledger`), and an optional multi-workspace HTTP server
+(`ragledger server serve`):
 
 - **Manifest core**: RFC 8785 canonical JSON, stable content-derived
   record ids, a pydantic-validated manifest schema, Ed25519 signing and
@@ -66,6 +67,17 @@ library (`import ragledger`):
 - **Reports**: self-contained JSON and HTML reports (no external
   assets, no `<script>` tag) for a manifest, a snapshot, and a
   reconciliation result.
+- **Server** (v0.2.0): a FastAPI `/api/v1` surface over the same
+  deterministic core -- workspaces with scoped API tokens, SSRF-safe
+  vector-target registration with AES-256-GCM credential storage,
+  source-collection scans, builds, snapshots, and reconciliations
+  executed through a Postgres-backed job queue (`FOR UPDATE SKIP
+  LOCKED` leasing, bounded retries, cooperative cancellation), manifest
+  signing/verification over HTTP, SSE progress events, policy
+  management with immutable revisions, a findings API, and a
+  secret-free workspace export. RFC 9457 problem responses throughout,
+  and an append-only audit trail written in the same transaction as
+  every mutation.
 
 ## Install
 
@@ -239,11 +251,42 @@ src/ragledger/
   reports/     Self-contained JSON/HTML report rendering for a
                manifest, a snapshot, and a reconciliation result.
   cli/         The `ragledger` command-line entry point.
+  server/      The optional FastAPI server: settings, SQLAlchemy 2.0
+               persistence with Alembic migrations, API-token auth and
+               credential encryption, the DB job queue and handlers,
+               the /api/v1 routes, and the append-only audit log.
 ```
 
-Everything above runs as a local CLI process or library import. There
-is no server, database, or authentication layer in this release; see
-[Limitations](#limitations).
+The CLI and library run standalone with no services at all. The server
+additionally needs PostgreSQL (its own persistence, not a target) and
+is entirely optional.
+
+## Server quickstart
+
+```bash
+# Start the server's own Postgres (port 25433; separate from any target)
+docker compose up -d appdb
+
+# Migrate, then run the API
+uv run ragledger server migrate
+uv run ragledger server serve
+
+# First-run bootstrap: creates the first user, workspace, and admin token.
+# Only works while the instance has no users; a 409 forever afterwards.
+curl -s -X POST localhost:8000/api/v1/auth/bootstrap \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","workspace_slug":"main","workspace_name":"Main"}'
+```
+
+The bootstrap response contains the admin bearer token (shown exactly
+once) and the workspace id; every other endpoint is
+`Authorization: Bearer <token>` under `/api/v1/workspaces/{id}/...`.
+Long-running work (source scans, builds, snapshots, reconciliations)
+returns `202` with a job id; the API process executes jobs in-process,
+and `ragledger server worker` runs them in a dedicated process instead
+when preferred -- both lease from the same Postgres-backed queue, so
+whichever gets there first wins. Interactive API docs are served at
+`/docs`.
 
 ## Determinism and security notes
 
@@ -302,10 +345,15 @@ production-sensitive.
   manifest is constructed for the reconciliation engine's own test
   suite, which is fully implemented and tested against exactly that
   shape).
-- **No server, API, web UI, or authentication.** This release is a
-  standalone CLI and Python library only. Workspaces, roles, API
-  tokens, a hosted lineage explorer, and SSE progress/audit trails are
-  specified but not part of v0.1.0.
+- **No web UI.** The server exposes a complete HTTP API (with
+  interactive OpenAPI docs at `/docs`), but the browser-based lineage
+  explorer described in the project specification is not part of this
+  release.
+- **Job execution is polling-based.** The job queue's source of truth
+  is Postgres (`FOR UPDATE SKIP LOCKED` leasing); a dedicated worker
+  polls it rather than being woken by a Redis/Dramatiq message
+  channel. The poll interval is the only cost; a push channel can be
+  added without any schema change.
 - **Docling and Presidio are not integrated.** PDF/HTML/text parsing
   uses this project's own native deterministic adapters, not Docling;
   DOCX is not supported. PII detection uses deterministic regex/checksum

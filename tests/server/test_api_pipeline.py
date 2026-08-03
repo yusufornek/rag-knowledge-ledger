@@ -301,7 +301,7 @@ class TestBuilds:
             headers=_auth(boot),
         )
         assert response.status_code == 409
-        assert response.json()["title"] == "Build not cancellable"
+        assert response.json()["title"] == "Not cancellable"
 
 
 class TestScopes:

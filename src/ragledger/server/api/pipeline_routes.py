@@ -57,9 +57,14 @@ from ragledger.server.db.models import (
     SourceCollection,
     SourceVersion,
 )
-from ragledger.server.db.models.enums import BuildState, JobStatus
-from ragledger.server.handlers import JOB_TYPE_BUILD, JOB_TYPE_SCAN, make_handlers
-from ragledger.server.jobs import enqueue_job, run_pending_jobs
+from ragledger.server.db.models.enums import BuildState
+from ragledger.server.handlers import (
+    JOB_TYPE_BUILD,
+    JOB_TYPE_SCAN,
+    make_cancel_finalizers,
+    make_handlers,
+)
+from ragledger.server.jobs import CancelOutcome, enqueue_job, request_cancel, run_pending_jobs
 
 __all__ = ["pipeline_router"]
 
@@ -72,7 +77,40 @@ def _schedule_job_execution(request: Request, background: BackgroundTasks) -> No
     """Run the queue after this request commits (single-process execution path)."""
     settings = _settings(request)
     session_factory = request.app.state.session_factory
-    background.add_task(run_pending_jobs, session_factory, make_handlers(settings))
+    background.add_task(
+        run_pending_jobs,
+        session_factory,
+        make_handlers(settings),
+        finalizers=make_cancel_finalizers(),
+    )
+
+
+def _latest_job_for(
+    db: Session, entity_type: str, entity_id: uuid.UUID, *, for_update: bool = False
+) -> Job | None:
+    query = (
+        select(Job)
+        .where(Job.related_entity_type == entity_type, Job.related_entity_id == str(entity_id))
+        .order_by(Job.created_at.desc())
+        .limit(1)
+    )
+    if for_update:
+        query = query.with_for_update()
+    return db.execute(query).scalar_one_or_none()
+
+
+def _cancel_entity_job(db: Session, entity_type: str, entity_id: uuid.UUID) -> str:
+    """Request cancellation of an entity's latest job; raise a 409 problem if terminal."""
+    job = _latest_job_for(db, entity_type, entity_id, for_update=True)
+    outcome = CancelOutcome.NOT_CANCELLABLE if job is None else request_cancel(db, job)
+    if outcome == CancelOutcome.NOT_CANCELLABLE:
+        raise ProblemException(
+            status=409,
+            title="Not cancellable",
+            detail=f"this {entity_type}'s job already finished; nothing to cancel",
+            problem_type=problem_type("not-cancellable"),
+        )
+    return outcome
 
 
 def _job_out(job: Job) -> JobOut:
@@ -501,30 +539,18 @@ def cancel_build(
     db: DbSession,
     auth: Annotated[AuthContext, require_scope("builds")],
 ) -> BuildOut:
-    """Cancel a build whose job is still queued.
+    """Cancel a build: outright while queued, cooperatively while running.
 
-    A build already running cannot be cancelled in this slice (the
-    cooperative cancel-requested protocol arrives with the worker
-    wiring); attempting it is a 409, not a silent no-op.
+    A queued job flips straight to `CANCELLED` and the build with it; a
+    running job gets its `cancel_requested` flag set and the worker
+    honors it at its next check point, after which the cancel finalizer
+    stamps the build `CANCELLED`. A build already finished is a 409.
     """
     build = _get_workspace_build(db, auth, build_id)
-    job = db.execute(
-        select(Job)
-        .where(Job.related_entity_type == "build", Job.related_entity_id == str(build.id))
-        .order_by(Job.created_at.desc())
-        .limit(1)
-        .with_for_update()
-    ).scalar_one_or_none()
-    if build.state != BuildState.PENDING or job is None or job.status != JobStatus.QUEUED:
-        raise ProblemException(
-            status=409,
-            title="Build not cancellable",
-            detail="only a build whose job is still queued can be cancelled in this release",
-            problem_type=problem_type("build-not-cancellable"),
-        )
-    job.status = JobStatus.CANCELLED
-    job.completed_at = build.completed_at = datetime.now(UTC)
-    build.state = BuildState.CANCELLED
+    outcome = _cancel_entity_job(db, "build", build.id)
+    if outcome == CancelOutcome.CANCELLED and build.state == BuildState.PENDING:
+        build.state = BuildState.CANCELLED
+        build.completed_at = datetime.now(UTC)
     AuditLog(db).record(
         actor_type="api_token",
         actor_id=str(auth.token_id),

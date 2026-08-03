@@ -44,7 +44,11 @@ from ragledger.core.signing import (
     verify_manifest,
 )
 from ragledger.server.api.deps import AuthContext, require_scope
-from ragledger.server.api.pipeline_routes import _job_out, _schedule_job_execution
+from ragledger.server.api.pipeline_routes import (
+    _cancel_entity_job,
+    _job_out,
+    _schedule_job_execution,
+)
 from ragledger.server.api.problems import ProblemException, problem_type
 from ragledger.server.api.routes import _not_found, _request_id, _settings
 from ragledger.server.api.schemas import (
@@ -62,8 +66,9 @@ from ragledger.server.db.models import (
     ManifestSignature,
     VectorTarget,
 )
+from ragledger.server.db.models.enums import SnapshotStatus
 from ragledger.server.handlers import JOB_TYPE_SNAPSHOT
-from ragledger.server.jobs import enqueue_job
+from ragledger.server.jobs import CancelOutcome, enqueue_job
 from ragledger.server.settings import Settings
 
 __all__ = ["manifest_router"]
@@ -337,4 +342,40 @@ def get_snapshot(
     row = db.get(InventorySnapshot, snapshot_id)
     if row is None or row.workspace_id != auth.workspace_id:
         raise _not_found("snapshot")
+    return _snapshot_out(row)
+
+
+@manifest_router.post(
+    "/workspaces/{workspace_id}/snapshots/{snapshot_id}:cancel", response_model=SnapshotOut
+)
+def cancel_snapshot(
+    workspace_id: uuid.UUID,
+    snapshot_id: uuid.UUID,
+    request: Request,
+    db: DbSession,
+    auth: Annotated[AuthContext, require_scope("snapshots")],
+) -> SnapshotOut:
+    """Cancel a snapshot: outright while queued, cooperatively while streaming.
+
+    Per section 21: an already-written checkpoint artifact is retained
+    and the snapshot's status becomes `cancelled`; a finished snapshot
+    is a 409.
+    """
+    row = db.get(InventorySnapshot, snapshot_id)
+    if row is None or row.workspace_id != auth.workspace_id:
+        raise _not_found("snapshot")
+    outcome = _cancel_entity_job(db, "inventory_snapshot", row.id)
+    if outcome == CancelOutcome.CANCELLED and row.status == SnapshotStatus.PENDING:
+        row.status = SnapshotStatus.CANCELLED
+    AuditLog(db).record(
+        actor_type="api_token",
+        actor_id=str(auth.token_id),
+        action="snapshot.cancel",
+        result=outcome,
+        workspace_id=auth.workspace_id,
+        entity_type="inventory_snapshot",
+        entity_id=str(row.id),
+        request_id=_request_id(request),
+    )
+    db.commit()
     return _snapshot_out(row)

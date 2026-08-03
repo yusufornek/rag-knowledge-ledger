@@ -7,6 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.2.0 - 2026-08-04
+
+### Added
+
+- Multi-workspace HTTP server (`ragledger server serve`): a FastAPI
+  `/api/v1` surface over the same deterministic core the CLI uses, with
+  RFC 9457 problem responses throughout.
+- Authentication and authorization: one-shot local admin bootstrap
+  (`POST /auth/bootstrap`), scoped API tokens (selector lookup,
+  per-token salt, constant-time verification), scope enforcement on
+  every route, and cross-workspace access rendered as 404 to prevent
+  existence probing.
+- Vector target registration with SSRF-safe endpoint validation
+  (globally-routable classification, DNS resolved at validation time,
+  link-local/cloud-metadata always blocked, private ranges only via an
+  explicit CIDR allowlist) and AES-256-GCM credential storage with
+  rotation-friendly key ids; credentials never appear in any response.
+- A Postgres-backed job queue (`FOR UPDATE SKIP LOCKED` leasing,
+  expired-lease recovery, bounded retries, no-retry classification for
+  configuration errors, cooperative cancellation with per-type cancel
+  finalizers) executing source-collection scans, manifest builds,
+  inventory snapshots, and reconciliations; `ragledger server worker`
+  runs a dedicated polling worker against the same queue.
+- Manifest endpoints: list/get, Ed25519 signing with the server's
+  secret-mounted key, and verification against a trust-store directory.
+- Reconciliation over HTTP: findings persisted to a queryable table
+  (severity/code filters, stable fingerprint ordering), the full report
+  content-addressed into the artifact store, policy management with
+  immutable content-hash-deduped revisions, gate evaluations recorded
+  per reconciliation, ad-hoc policy re-evaluation, a read-only
+  remediation plan export (JSON/CSV), and lineage drill-down.
+- SSE progress events for builds, snapshots, and reconciliations,
+  streaming job status changes from the queue's source of truth.
+- A secret-free workspace export (FR-005): configuration and result
+  metadata only, rendered through the same DTOs the API serves.
+- An append-only audit trail written in the same transaction as every
+  mutating operation, with a keyset-paginated listing endpoint.
+- `ragledger server migrate`: packaged `alembic upgrade head`.
+
+### Fixed
+
+- The PII scanner's regex timeout now works off the main thread
+  (server workers, background tasks): `SIGALRM` where available on the
+  main thread, a bounded thread-join fallback elsewhere. It previously
+  raised `ValueError: signal only works in main thread`.
+
 ## 0.1.1 - 2026-07-21
 
 ### Fixed

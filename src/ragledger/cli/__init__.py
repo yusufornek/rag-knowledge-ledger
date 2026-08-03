@@ -26,6 +26,7 @@ from ragledger.cli.commands import (
     manifest_cmd,
     reconcile_cmd,
     report_cmd,
+    server_cmd,
     snapshot_cmd,
     target_cmd,
 )
@@ -63,6 +64,7 @@ app.add_typer(target_cmd.app, name="target")
 app.command("snapshot")(snapshot_cmd.snapshot)
 app.add_typer(report_cmd.app, name="report")
 app.command("reconcile")(reconcile_cmd.reconcile)
+app.add_typer(server_cmd.app, name="server")
 
 
 def main() -> None:

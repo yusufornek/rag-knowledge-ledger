@@ -43,10 +43,14 @@ from ragledger.server.db.models.enums import JobStatus
 
 __all__ = [
     "MAX_ATTEMPTS",
+    "CancelOutcome",
+    "JobCancelledError",
     "JobHandler",
     "PermanentJobError",
+    "check_cancellation",
     "enqueue_job",
     "lease_next_job",
+    "request_cancel",
     "run_pending_jobs",
 ]
 
@@ -60,6 +64,55 @@ JobHandler = Callable[[Session, Job], None]
 
 class PermanentJobError(Exception):
     """A handler failure that must not be retried (auth/config/deterministic errors)."""
+
+
+class JobCancelledError(Exception):
+    """Raised by a handler when it observes its job's `cancel_requested` flag.
+
+    `run_pending_jobs` rolls the handler's partial writes back, marks
+    the job `CANCELLED`, and runs the job type's registered cancel
+    finalizer (if any) so the related entity's own status can reflect
+    the cancellation -- see the `finalizers` argument.
+    """
+
+
+class CancelOutcome:
+    """What `request_cancel` did: cancelled outright, flagged, or nothing."""
+
+    CANCELLED = "cancelled"
+    REQUESTED = "requested"
+    NOT_CANCELLABLE = "not_cancellable"
+
+
+def request_cancel(session: Session, job: Job) -> str:
+    """Cancel a queued job outright, or flag a leased/running one for cooperative stop.
+
+    Returns a `CancelOutcome` value. A terminal job is left untouched
+    (`NOT_CANCELLABLE`). The caller owns the transaction.
+    """
+    if job.status == JobStatus.QUEUED:
+        job.status = JobStatus.CANCELLED
+        job.completed_at = datetime.now(UTC)
+        session.flush()
+        return CancelOutcome.CANCELLED
+    if job.status in (JobStatus.LEASED, JobStatus.RUNNING):
+        job.cancel_requested = True
+        session.flush()
+        return CancelOutcome.REQUESTED
+    return CancelOutcome.NOT_CANCELLABLE
+
+
+def check_cancellation(session: Session, job: Job) -> None:
+    """Raise `JobCancelledError` if this job's cancel flag was set by another transaction.
+
+    Handlers call this between units of work (per page of points, per
+    pipeline stage). The flag is re-read from the database, not from
+    the session's identity-map copy, because the `:cancel` endpoint
+    sets it in a different session/transaction.
+    """
+    session.expire(job, ["cancel_requested"])
+    if job.cancel_requested:
+        raise JobCancelledError(f"job {job.id} was cancelled by request")
 
 
 def enqueue_job(
@@ -129,6 +182,7 @@ def run_pending_jobs(
     *,
     worker_name: str = "inline",
     max_jobs: int | None = None,
+    finalizers: dict[str, JobHandler] | None = None,
 ) -> int:
     """Lease and run queued jobs until the queue is empty (or ``max_jobs`` is hit).
 
@@ -162,6 +216,14 @@ def run_pending_jobs(
             work_session.flush()
             try:
                 handler(work_session, leased)
+            except JobCancelledError:
+                work_session.rollback()
+                cancelled = work_session.get(Job, job_id)
+                if cancelled is not None:
+                    _finish(work_session, cancelled, JobStatus.CANCELLED, None)
+                    finalizer = (finalizers or {}).get(job_type)
+                    if finalizer is not None:
+                        finalizer(work_session, cancelled)
             except PermanentJobError as exc:
                 work_session.rollback()
                 _fail_in_fresh_row(work_session, job_id, str(exc), retry=False)

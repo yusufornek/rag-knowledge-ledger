@@ -15,7 +15,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
-from sqlalchemy import DateTime, ForeignKey, Index, Integer, String
+from sqlalchemy import DateTime, ForeignKey, Index, Integer, String, false
 from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
@@ -48,6 +48,11 @@ class Job(UUIDPrimaryKeyMixin, CreatedAtMixin, UpdatedAtMixin, Base):
     lease_expires_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True
     )
+    cancel_requested: Mapped[bool] = mapped_column(
+        nullable=False, default=False, server_default=false()
+    )
+    """Cooperative cancellation flag (section 21): an API `:cancel` sets it;
+    a running handler polls it between units of work and aborts cleanly."""
     attempt_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_error: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

@@ -21,19 +21,32 @@ content-addressed artifact (see
 
 from __future__ import annotations
 
+import csv
+import io
 import json
 import uuid
+from pathlib import Path
 from typing import Annotated, Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, Request
+from fastapi.responses import PlainTextResponse
 from pydantic import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ragledger.core.hashing import hash_canonical
-from ragledger.reconcile.policy import PolicyValidationError, load_policy_document
+from ragledger.reconcile.policy import (
+    PolicyValidationError,
+    evaluate_policy,
+    load_policy_document,
+)
+from ragledger.reconcile.report import ReconciliationReport
 from ragledger.server.api.deps import AuthContext, require_scope
-from ragledger.server.api.pipeline_routes import _job_out, _schedule_job_execution
+from ragledger.server.api.pipeline_routes import (
+    _cancel_entity_job,
+    _job_out,
+    _schedule_job_execution,
+)
 from ragledger.server.api.pipeline_schemas import (
     FindingOut,
     PolicyCreateRequest,
@@ -45,7 +58,7 @@ from ragledger.server.api.pipeline_schemas import (
     ReconciliationOut,
 )
 from ragledger.server.api.problems import ProblemException, problem_type
-from ragledger.server.api.routes import _not_found, _request_id
+from ragledger.server.api.routes import _not_found, _request_id, _settings
 from ragledger.server.app import get_db_session
 from ragledger.server.audit import AuditLog
 from ragledger.server.db.models import (
@@ -57,9 +70,9 @@ from ragledger.server.db.models import (
     PolicyRevision,
     Reconciliation,
 )
-from ragledger.server.db.models.enums import FindingSeverity
+from ragledger.server.db.models.enums import FindingSeverity, ReconciliationState
 from ragledger.server.handlers import JOB_TYPE_RECONCILE
-from ragledger.server.jobs import enqueue_job
+from ragledger.server.jobs import CancelOutcome, enqueue_job
 
 __all__ = ["reconcile_router"]
 
@@ -233,6 +246,21 @@ def create_policy_revision(
 # --------------------------------------------------------------------------
 
 
+def _finding_out(row: Finding) -> FindingOut:
+    return FindingOut(
+        id=row.id,
+        fingerprint=row.fingerprint,
+        code=row.code,
+        severity=row.severity,
+        source_hash=row.source_hash,
+        chunk_hash=row.chunk_hash,
+        point_hash=row.point_hash,
+        expected_evidence=row.expected_evidence,
+        observed_evidence=row.observed_evidence,
+        created_at=row.created_at,
+    )
+
+
 def _reconciliation_out(db: Session, row: Reconciliation) -> ReconciliationOut:
     finding_count = db.execute(
         select(func.count()).select_from(Finding).where(Finding.reconciliation_id == row.id)
@@ -363,6 +391,148 @@ def get_reconciliation(
     return _reconciliation_out(db, row)
 
 
+@reconcile_router.post(
+    "/workspaces/{workspace_id}/reconciliations/{reconciliation_id}:cancel",
+    response_model=ReconciliationOut,
+)
+def cancel_reconciliation(
+    workspace_id: uuid.UUID,
+    reconciliation_id: uuid.UUID,
+    request: Request,
+    db: DbSession,
+    auth: Annotated[AuthContext, require_scope("reconciliations")],
+) -> ReconciliationOut:
+    row = db.get(Reconciliation, reconciliation_id)
+    if row is None or row.workspace_id != auth.workspace_id:
+        raise _not_found("reconciliation")
+    outcome = _cancel_entity_job(db, "reconciliation", row.id)
+    if outcome == CancelOutcome.CANCELLED and row.state == ReconciliationState.PENDING:
+        row.state = ReconciliationState.CANCELLED
+    AuditLog(db).record(
+        actor_type="api_token",
+        actor_id=str(auth.token_id),
+        action="reconciliation.cancel",
+        result=outcome,
+        workspace_id=auth.workspace_id,
+        entity_type="reconciliation",
+        entity_id=str(row.id),
+        request_id=_request_id(request),
+    )
+    db.commit()
+    return _reconciliation_out(db, row)
+
+
+def _load_report(db: Session, row: Reconciliation, request: Request) -> ReconciliationReport:
+    """Load the full report artifact a completed reconciliation produced."""
+    if row.state != ReconciliationState.COMPLETED or not row.summary:
+        raise ProblemException(
+            status=409,
+            title="Reconciliation not completed",
+            detail="this reconciliation has no report yet",
+            problem_type=problem_type("reconciliation-not-completed"),
+        )
+    report_ref = str(row.summary.get("report_artifact", ""))
+    digest = report_ref.rpartition("/")[2]
+    path = Path(_settings(request).artifact_store_root) / "artifacts" / digest
+    if not digest or not path.is_file():
+        raise ProblemException(
+            status=500,
+            title="Report artifact missing",
+            detail="the reconciliation's report artifact is not present in the store",
+            problem_type=problem_type("artifact-missing"),
+        )
+    return ReconciliationReport.model_validate_json(path.read_bytes())
+
+
+@reconcile_router.post(
+    "/workspaces/{workspace_id}/reconciliations/{reconciliation_id}:evaluate-policy"
+)
+def evaluate_policy_endpoint(
+    workspace_id: uuid.UUID,
+    reconciliation_id: uuid.UUID,
+    payload: PolicyRevisionCreateRequest,
+    request: Request,
+    db: DbSession,
+    auth: Annotated[AuthContext, require_scope("policies")],
+) -> dict[str, Any]:
+    """Re-evaluate a completed reconciliation's stored result against a policy document.
+
+    The document is evaluated as-posted (it does not need to be a saved
+    policy), against the exact `ReconciliationResult` the run produced
+    -- nothing is re-reconciled. No `PolicyEvaluation` row is written
+    for an ad-hoc evaluation; attach a policy at creation time for a
+    persisted gate record.
+    """
+    row = db.get(Reconciliation, reconciliation_id)
+    if row is None or row.workspace_id != auth.workspace_id:
+        raise _not_found("reconciliation")
+    _validate_policy_document(payload.document)
+    document = load_policy_document(json.dumps(payload.document), document_format="json")
+    report = _load_report(db, row, request)
+    verdict = evaluate_policy(document, report.result)
+    return verdict.model_dump(mode="json")
+
+
+@reconcile_router.post(
+    "/workspaces/{workspace_id}/reconciliations/{reconciliation_id}/remediation-plans"
+)
+def get_remediation_plan(
+    workspace_id: uuid.UUID,
+    reconciliation_id: uuid.UUID,
+    request: Request,
+    db: DbSession,
+    auth: Annotated[AuthContext, require_scope("reconciliations")],
+    format: Annotated[str, Query(pattern="^(json|csv)$")] = "json",
+) -> Any:
+    """The read-only remediation plan (FR-133/FR-135) from the stored report.
+
+    ``format=csv`` streams the plan's rows as CSV; destructive
+    candidates are explicitly flagged in both shapes. Nothing here ever
+    executes an action (FR-134).
+    """
+    row = db.get(Reconciliation, reconciliation_id)
+    if row is None or row.workspace_id != auth.workspace_id:
+        raise _not_found("reconciliation")
+    report = _load_report(db, row, request)
+    if format == "csv":
+        buffer = io.StringIO()
+        writer = csv.writer(buffer)
+        for csv_row in report.remediation.to_csv_rows():
+            writer.writerow(csv_row)
+        return PlainTextResponse(buffer.getvalue(), media_type="text/csv")
+    return report.remediation.model_dump(mode="json")
+
+
+@reconcile_router.get(
+    "/workspaces/{workspace_id}/reconciliations/{reconciliation_id}/lineage/{portable_id}",
+    response_model=list[FindingOut],
+)
+def get_lineage_findings(
+    workspace_id: uuid.UUID,
+    reconciliation_id: uuid.UUID,
+    portable_id: str,
+    db: DbSession,
+    auth: Annotated[AuthContext, require_scope("reconciliations")],
+) -> list[FindingOut]:
+    """Findings touching one portable id (source or chunk), for lineage drill-down."""
+    reconciliation = db.get(Reconciliation, reconciliation_id)
+    if reconciliation is None or reconciliation.workspace_id != auth.workspace_id:
+        raise _not_found("reconciliation")
+    rows = (
+        db.execute(
+            select(Finding)
+            .where(
+                Finding.reconciliation_id == reconciliation.id,
+                (Finding.source_hash == portable_id) | (Finding.chunk_hash == portable_id),
+            )
+            .order_by(Finding.fingerprint)
+        )
+        .scalars()
+        .all()
+    )
+    return [_finding_out(row) for row in rows]
+
+
 @reconcile_router.get(
     "/workspaces/{workspace_id}/reconciliations/{reconciliation_id}/findings",
     response_model=list[FindingOut],
@@ -393,18 +563,4 @@ def list_findings(
     if code is not None:
         query = query.where(Finding.code == code)
     rows = db.execute(query).scalars().all()
-    return [
-        FindingOut(
-            id=row.id,
-            fingerprint=row.fingerprint,
-            code=row.code,
-            severity=row.severity,
-            source_hash=row.source_hash,
-            chunk_hash=row.chunk_hash,
-            point_hash=row.point_hash,
-            expected_evidence=row.expected_evidence,
-            observed_evidence=row.observed_evidence,
-            created_at=row.created_at,
-        )
-        for row in rows
-    ]
+    return [_finding_out(row) for row in rows]
