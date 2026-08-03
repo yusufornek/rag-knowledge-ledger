@@ -1,4 +1,4 @@
-"""SQLAlchemy 2.0 persistence layer for the server, per PROJECT_SPEC.md section 15/36.
+"""SQLAlchemy 2.0 persistence layer for the server, per the design specification section 15/36.
 
 `ragledger.server.db.base` defines the shared `Base` declarative class,
 naming conventions, and the UUIDv7 identity helper section 15.3

@@ -249,7 +249,7 @@ def require_workspace_scope(
 
     Every repository method that fetches a row by its own primary key
     (not already filtered by workspace in the query itself) must call
-    this before returning the row to a caller, per PROJECT_SPEC.md
+    this before returning the row to a caller, per the design specification
     section 15.3: "Cross-workspace repository methods mandatory;
     negative tests." This turns a stale or forged id from another
     workspace into an explicit, typed error instead of a silent

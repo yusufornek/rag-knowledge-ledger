@@ -1,4 +1,4 @@
-"""`VectorTarget` and `InventorySnapshot`, per PROJECT_SPEC.md section 15.1/19/36.1/36.4.
+"""`VectorTarget` and `InventorySnapshot`, per the design specification section 15.1/19/36.1/36.4.
 
 `VectorTarget.credential_ciphertext` is the AES-GCM-encrypted connector
 credential FR-003/section 19.2 require ("Target credential theft: AES-GCM,

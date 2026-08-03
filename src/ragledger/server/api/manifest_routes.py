@@ -1,6 +1,6 @@
 """`/api/v1` routes for manifests and inventory snapshots (M7 wave B slice 3).
 
-Against PROJECT_SPEC.md section 16's surface:
+Against the design specification section 16's surface:
 
 - ``GET /workspaces/{id}/manifests``, ``GET .../manifests/{mid}``
 - ``POST /workspaces/{id}/manifests/{mid}:sign``

@@ -1,4 +1,4 @@
-"""`Reconciliation`, `Finding`, and `lineage_index`, per PROJECT_SPEC.md section 15.1/36.1/36.4.
+"""`Reconciliation`, `Finding`, and `lineage_index` (design specification 15.1/36.1/36.4).
 
 `Finding` stores only a bounded, searchable summary of each drift/
 governance issue (code, severity, source/chunk/point hashes,

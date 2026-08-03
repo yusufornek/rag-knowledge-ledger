@@ -1,10 +1,10 @@
-"""Auth and workspace isolation entities, per PROJECT_SPEC.md section 15.1 group 1.
+"""Auth and workspace isolation entities, per the design specification section 15.1 group 1.
 
 `User`, `Workspace`, `Membership`, `ApiToken` -- "Auth/izolasyon". Every
 other domain table in this package carries a `workspace_id` foreign
 key back to `Workspace` (denormalized directly onto the row, not only
 reachable through a join chain), so that a repository method can
-enforce PROJECT_SPEC.md section 15.3's "Cross-workspace repository
+enforce the design specification section 15.3's "Cross-workspace repository
 methods mandatory" rule with a single `WHERE workspace_id = :id`
 clause regardless of how deep the entity sits in the domain graph.
 

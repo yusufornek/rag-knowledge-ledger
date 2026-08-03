@@ -1,4 +1,4 @@
-"""The `/api/v1` HTTP surface (M7 wave B), per PROJECT_SPEC.md section 16.
+"""The `/api/v1` HTTP surface (M7 wave B), per the design specification section 16.
 
 `ragledger.server.api.routes.api_router` holds the route handlers;
 `ragledger.server.api.deps` the authentication/scope dependency chain;

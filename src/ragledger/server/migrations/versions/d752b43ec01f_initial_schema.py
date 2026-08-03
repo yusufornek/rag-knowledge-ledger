@@ -6,7 +6,7 @@ memberships/api_tokens, source_collections/source_assets/
 source_versions/pipeline_configs, builds, manifests/manifest_signatures,
 vector_targets/inventory_snapshots, reconciliations/findings/
 lineage_index, policies/policy_revisions/policy_evaluations,
-audit_events, and jobs -- PROJECT_SPEC.md section 15.1/36.1's entity
+audit_events, and jobs -- the design specification section 15.1/36.1's entity
 list for this wave.
 
 This baseline migration is generated directly from the ORM metadata

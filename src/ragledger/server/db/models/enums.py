@@ -40,7 +40,7 @@ def enum_values(enum_cls: type[_E]) -> list[str]:
 
 
 class MembershipRole(StrEnum):
-    """PROJECT_SPEC.md FR-001: "workspace ve roles owner/editor/viewer"."""
+    """the design specification FR-001: "workspace ve roles owner/editor/viewer"."""
 
     OWNER = "owner"
     EDITOR = "editor"

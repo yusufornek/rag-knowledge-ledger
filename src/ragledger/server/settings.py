@@ -1,4 +1,4 @@
-"""Server configuration, per PROJECT_SPEC.md section 41.
+"""Server configuration, per the design specification section 41.
 
 `Settings` is a `pydantic-settings` model that reads the environment
 variable names section 41 defines verbatim (`APP_ENV`, `DATABASE_URL`,
@@ -14,8 +14,8 @@ need them: the FastAPI process's own bind address (`APP_HOST`/
 `APP_PORT`) and the local content-addressed artifact store root
 (`ARTIFACT_STORE_ROOT`, consumed by `ragledger.core.artifacts.ArtifactStore`)
 used when no `OBJECT_STORE_*` backend is configured. Neither name
-appears in PROJECT_SPEC.md's section 41 listing; see
-`IMPLEMENTATION_STATUS.md` for this interpretation decision.
+appears in the design specification's section 41 listing; see
+the project status notes for this interpretation decision.
 
 Validation posture, per section 41's prose: unknown *environment*
 variables are never an error here (a process environment routinely
@@ -24,7 +24,7 @@ is `"ignore"`. What section 41 says *is* a hard error is an unknown
 key in an app *config file*; this wave introduces no config-file
 loader (nothing else in the project has one yet), so that half of the
 rule has nothing to attach to yet and is not implemented -- see
-`IMPLEMENTATION_STATUS.md`.
+the project status notes.
 
 Secrets (`DATABASE_URL`, `REDIS_URL`, the `APP_ENCRYPTION_KEY_V*`
 keyring, `SESSION_SECRET`, `OBJECT_STORE_ACCESS_KEY`/`_SECRET_KEY`) are
@@ -115,7 +115,7 @@ class Settings(BaseSettings):
     private_target_cidrs: str = Field(default="", alias="PRIVATE_TARGET_CIDRS")
 
     # -- Source roots the server may scan (not in section 41's list; wave B
-    # interpretation, see IMPLEMENTATION_STATUS.md: the CLI reads whatever
+    # interpretation, see the project status notes: the CLI reads whatever
     # path its operator passes, but a server accepting source-collection
     # roots over HTTP needs an explicit bound on what the API can reach) --
     source_root_allowed_bases: str = Field(default="", alias="SOURCE_ROOT_ALLOWED_BASES")
@@ -129,7 +129,7 @@ class Settings(BaseSettings):
     )
 
     # -- Retention ------------------------------------------------------------------
-    # PROJECT_SPEC.md section 41: `RAW_SOURCE_RETENTION_DAYS=0` is ambiguous
+    # the design specification section 41: `RAW_SOURCE_RETENTION_DAYS=0` is ambiguous
     # between "workspace policy default" and "immediate purge", so the final
     # implementation must use an explicit mode plus optional days instead.
     raw_source_retention_mode: Literal["retain", "purge_after_build"] = Field(
@@ -230,7 +230,7 @@ class Settings(BaseSettings):
     def signing_enabled(self) -> bool:
         """Whether manifest signing is available in this process.
 
-        Per PROJECT_SPEC.md section 41: "Web server signing kapalıysa key
+        Per the design specification section 41: "Web server signing kapalıysa key
         file yok ve feature status disabled; build tamamlanabilir
         unsigned" -- signing is opportunistic, not required, so this is a
         soft on/off flag rather than a validation failure when unset.

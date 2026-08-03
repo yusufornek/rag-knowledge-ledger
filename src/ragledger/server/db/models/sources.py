@@ -1,4 +1,4 @@
-"""Source discovery and pipeline configuration entities, per PROJECT_SPEC.md section 15.1/36.1/36.4.
+"""Source discovery and pipeline configuration entities (design specification 15.1/36.1/36.4).
 
 `SourceCollection` is a source namespace/root config; `SourceAsset` is a
 logical source (a stable identity across content changes);

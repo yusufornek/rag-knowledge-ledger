@@ -1,6 +1,6 @@
 """`/api/v1` routes for policies, reconciliations, and findings (M7 wave B slice 4).
 
-Against PROJECT_SPEC.md section 16's surface:
+Against the design specification section 16's surface:
 
 - ``GET|POST /workspaces/{id}/policies``
 - ``POST /workspaces/{id}/policies/{pid}/revisions``

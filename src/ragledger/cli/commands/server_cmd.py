@@ -1,6 +1,6 @@
 """`ragledger server serve|worker|migrate`: run the API, a job worker, or migrations.
 
-The server design (PROJECT_SPEC.md section 21) makes the `jobs` table
+The server design (the design specification section 21) makes the `jobs` table
 the source of truth, so a worker needs nothing but database access:
 `ragledger server worker` leases and executes queued jobs in a polling
 loop. The API process also executes jobs it enqueues (via background

@@ -1,4 +1,4 @@
-"""Job handlers: source-collection scan and manifest build, per PROJECT_SPEC.md sections 10/21.
+"""Job handlers: scan, build, snapshot, reconcile (design specification sections 10/21).
 
 These run inside `ragledger.server.jobs.run_pending_jobs`' work
 transaction: every row they write commits or rolls back together with

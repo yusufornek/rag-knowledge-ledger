@@ -1,4 +1,4 @@
-"""RFC 9457 problem-details error responses, per PROJECT_SPEC.md section 16.
+"""RFC 9457 problem-details error responses, per the design specification section 16.
 
 Section 16: "Base `/api/v1`, RFC 9457, cursor pagination, idempotency
 keys." Every error body an `/api/v1` route produces is an

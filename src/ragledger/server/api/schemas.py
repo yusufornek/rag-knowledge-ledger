@@ -1,4 +1,4 @@
-"""Request/response DTOs for `/api/v1`, per PROJECT_SPEC.md section 16.
+"""Request/response DTOs for `/api/v1`, per the design specification section 16.
 
 Section 16's closing rule governs every response model here: "Secret
 plaintext hiçbir response DTO'da bulunmaz." A target response carries

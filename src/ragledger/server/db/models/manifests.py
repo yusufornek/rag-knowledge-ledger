@@ -1,4 +1,4 @@
-"""`Manifest` and `Signature`, per PROJECT_SPEC.md section 15.1/36.1/36.4.
+"""`Manifest` and `Signature`, per the design specification section 15.1/36.1/36.4.
 
 Only manifest *metadata* and an *artifact reference* live here, per
 this wave's explicit scope: the full manifest JSON (potentially large,

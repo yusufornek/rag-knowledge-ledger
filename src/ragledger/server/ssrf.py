@@ -1,4 +1,4 @@
-"""SSRF-safe vector target URL validation, per FR-004 and PROJECT_SPEC.md section 20.
+"""SSRF-safe vector target URL validation, per FR-004 and the design specification section 20.
 
 `validate_target_url` is the single gate every endpoint URL a caller
 supplies for a `VectorTarget` must pass before the URL is stored or a

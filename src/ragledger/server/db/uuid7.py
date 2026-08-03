@@ -1,6 +1,6 @@
 """RFC 9562 UUID version 7 generation.
 
-PROJECT_SPEC.md section 15.3 requires every table's internal primary
+the design specification section 15.3 requires every table's internal primary
 key to be a UUIDv7 ("Internal UUIDv7; portable identity unique
 text/binary hash indexed" -- the *portable* identity is the separate,
 content-derived `ragledger.core.ids` string, not this key). Python's

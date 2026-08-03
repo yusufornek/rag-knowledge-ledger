@@ -1,4 +1,4 @@
-"""The `Build` entity: a pipeline job, per PROJECT_SPEC.md section 15.1/36.1/36.4.
+"""The `Build` entity: a pipeline job, per the design specification section 15.1/36.1/36.4.
 
 "builds: config/source snapshot/state/counters." A build is the unit
 that turns a `SourceCollection` plus a `PipelineConfig` revision into a

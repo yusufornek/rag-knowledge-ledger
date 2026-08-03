@@ -4,7 +4,7 @@ The naming convention gives every constraint and index a deterministic,
 inspectable name (rather than the driver-assigned defaults, which vary
 across Postgres versions and are hard to reference in a later Alembic
 migration). `UUIDPrimaryKeyMixin` and `CreatedAtMixin` implement the
-PROJECT_SPEC.md section 15.3 DB rules common to nearly every table:
+the design specification section 15.3 DB rules common to nearly every table:
 internal UUIDv7 primary keys and UTC timestamps.
 """
 
@@ -53,7 +53,7 @@ class UpdatedAtMixin:
 
     Only mixed into tables that model mutable state (workspaces,
     memberships, API token revocation, target credential rotation, job
-    status transitions); PROJECT_SPEC.md section 15.3's "Immutable
+    status transitions); the design specification section 15.3's "Immutable
     entities update edilmez" tables (builds, manifests, findings, and
     so on) intentionally do not get this mixin.
     """

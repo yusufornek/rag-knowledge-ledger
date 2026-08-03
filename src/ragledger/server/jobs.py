@@ -1,4 +1,4 @@
-"""DB-backed job queue: enqueue, lease, complete, per PROJECT_SPEC.md section 21.
+"""DB-backed job queue: enqueue, lease, complete, per the design specification section 21.
 
 Section 21: "Dramatiq Redis broker, DB source of truth. Job message IDs
 only. DB lease `FOR UPDATE SKIP LOCKED`." This module implements the DB
@@ -12,7 +12,7 @@ enqueueing request commits (single-process development/test execution).
 A dedicated worker process would call the same function in a loop; when
 the Dramatiq actor lands in a later slice, its actor body will also be
 exactly this function, with the queue message carrying only the job id
-per the spec. See `IMPLEMENTATION_STATUS.md`.
+per the spec. See the project status notes.
 
 Retry policy (section 21: "Retry transient network/5xx/429; auth/config
 no retry; parse deterministic crash no repeated unbounded retry"): a

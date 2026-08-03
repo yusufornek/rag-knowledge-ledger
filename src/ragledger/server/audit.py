@@ -1,4 +1,4 @@
-"""Append-only audit event writer, per PROJECT_SPEC.md section 15.1/15.3/19.
+"""Append-only audit event writer, per the design specification section 15.1/15.3/19.
 
 Section 15.3: "Audit append-only, monthly partition readiness." This
 module exposes exactly one write path (`AuditLog.record`), which only

@@ -1,4 +1,4 @@
-"""`Policy`, `PolicyRevision`, `PolicyEvaluation`, per PROJECT_SPEC.md section 15.1.
+"""`Policy`, `PolicyRevision`, `PolicyEvaluation`, per the design specification section 15.1.
 
 "Policy, PolicyRevision, PolicyEvaluation | Gate." A `Policy` is a
 named, mutable pointer; each edit creates a new, immutable

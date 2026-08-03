@@ -1,6 +1,6 @@
 """`/api/v1` route handlers for M7 wave B's first slice.
 
-Implemented here, against PROJECT_SPEC.md section 16's surface:
+Implemented here, against the design specification section 16's surface:
 
 - ``POST /auth/bootstrap`` (FR-001): first-run local admin bootstrap.
 - ``GET /workspaces``, ``GET/PATCH /workspaces/{id}``.

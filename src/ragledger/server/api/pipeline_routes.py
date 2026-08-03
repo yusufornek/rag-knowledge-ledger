@@ -1,6 +1,6 @@
 """`/api/v1` routes for source collections, pipeline configs, builds, and jobs.
 
-M7 wave B slice 2, against PROJECT_SPEC.md section 16's surface:
+M7 wave B slice 2, against the design specification section 16's surface:
 
 - ``GET|POST /workspaces/{id}/source-collections``
 - ``POST /workspaces/{id}/source-collections/{cid}:scan`` (202 + job)

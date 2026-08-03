@@ -1,4 +1,4 @@
-"""`Job`: the DB source of truth for Dramatiq-orchestrated work, per PROJECT_SPEC.md section 21.
+"""`Job`: the DB source of truth for queue-orchestrated work (design specification section 21).
 
 Section 21: "Dramatiq Redis broker, DB source of truth. Job message IDs
 only. DB lease `FOR UPDATE SKIP LOCKED`." This row is what a worker

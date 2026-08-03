@@ -1,6 +1,6 @@
 """add jobs.cancel_requested
 
-Cooperative cancellation (PROJECT_SPEC.md section 21): the API's
+Cooperative cancellation (the design specification section 21): the API's
 `:cancel` endpoints set this flag; a running worker polls it between
 units of work and aborts cleanly.
 
