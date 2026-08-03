@@ -18,6 +18,7 @@ no retry").
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 import tempfile
@@ -39,37 +40,61 @@ from ragledger.connectors.base import (
     VectorTargetConnector,
 )
 from ragledger.connectors.config import PgvectorTargetConfig, QdrantTargetConfig
-from ragledger.connectors.ndjson import SnapshotHeader, write_snapshot
+from ragledger.connectors.ndjson import NdjsonConnector, SnapshotHeader, write_snapshot
 from ragledger.connectors.pgvector import PgvectorConnector
 from ragledger.connectors.qdrant import QdrantConnector
 from ragledger.core.artifacts import ArtifactStore
 from ragledger.core.hashing import hash_canonical
-from ragledger.core.manifest import canonical_manifest_bytes, compute_manifest_hash
+from ragledger.core.manifest import canonical_manifest_bytes, compute_manifest_hash, load_manifest
 from ragledger.pipeline.build import build_pipeline
 from ragledger.pipeline.cache import StageCache
 from ragledger.pipeline.discovery import DiscoveryConfig, discover_sources
+from ragledger.reconcile.engine import reconcile_big_data, reconcile_small_data
+from ragledger.reconcile.policy import (
+    PolicyValidationError,
+    evaluate_policy,
+    load_policy_document,
+)
+from ragledger.reconcile.remediation import build_remediation_plan
+from ragledger.reconcile.report import (
+    PolicyVerdict,
+    ReconciliationReport,
+    to_json_bytes,
+)
 from ragledger.server.db.models import (
     Build,
     InventorySnapshot,
     Job,
     Manifest,
     PipelineConfig,
+    PolicyEvaluation,
+    PolicyRevision,
+    Reconciliation,
     SourceAsset,
     SourceCollection,
     SourceVersion,
     VectorTarget,
 )
-from ragledger.server.db.models.enums import BuildState, SnapshotStatus, VectorTargetType
+from ragledger.server.db.models import Finding as FindingRow
+from ragledger.server.db.models.enums import (
+    BuildState,
+    PolicyEvaluationResult,
+    ReconciliationState,
+    SnapshotStatus,
+    VectorTargetType,
+)
 from ragledger.server.jobs import JobHandler, PermanentJobError
 from ragledger.server.security import decrypt_credential
 from ragledger.server.settings import Settings
 
 __all__ = [
     "JOB_TYPE_BUILD",
+    "JOB_TYPE_RECONCILE",
     "JOB_TYPE_SCAN",
     "JOB_TYPE_SNAPSHOT",
     "make_handlers",
     "run_build_job",
+    "run_reconcile_job",
     "run_scan_job",
     "run_snapshot_job",
 ]
@@ -79,6 +104,7 @@ logger = logging.getLogger("ragledger.server.handlers")
 JOB_TYPE_SCAN = "source_collection_scan"
 JOB_TYPE_BUILD = "manifest_build"
 JOB_TYPE_SNAPSHOT = "inventory_snapshot"
+JOB_TYPE_RECONCILE = "reconciliation"
 
 _SNAPSHOT_CONNECTOR_VERSION = "1"
 
@@ -430,10 +456,175 @@ def run_snapshot_job(session: Session, job: Job, *, settings: Settings) -> None:
     )
 
 
+# --------------------------------------------------------------------------
+# Reconciliation (sections 9/14, FR-120..FR-135)
+# --------------------------------------------------------------------------
+
+_RECONCILE_SMALL_DATA_MAX_POINTS = 100_000
+
+
+def _artifact_path(artifact_ref: str, settings: Settings) -> Path:
+    digest = artifact_ref.rpartition("/")[2]
+    path = Path(settings.artifact_store_root) / "artifacts" / digest
+    if not path.is_file():
+        raise PermanentJobError(f"artifact {artifact_ref!r} is not present in the store")
+    return path
+
+
+def _wrap_evidence(value: Any) -> dict[str, Any] | None:
+    if value is None:
+        return None
+    if isinstance(value, dict):
+        return value
+    return {"value": value}
+
+
+def run_reconcile_job(session: Session, job: Job, *, settings: Settings) -> None:
+    """Reconcile a manifest against a snapshot; persist findings and the full report.
+
+    The same engine path as `ragledger reconcile --auto`: the in-memory
+    join for ordinary snapshot sizes, falling back to the external
+    sort/merge path above `_RECONCILE_SMALL_DATA_MAX_POINTS` points.
+    The full `ReconciliationReport` (result + policy verdict +
+    remediation plan) is content-addressed into the artifact store;
+    `Finding` rows carry the bounded, queryable summary of each finding
+    (FR-123), and a `PolicyEvaluation` row records the gate outcome
+    when a policy revision was attached.
+    """
+    reconciliation_id = job.payload.get("reconciliation_id")
+    reconciliation = session.get(Reconciliation, reconciliation_id)
+    if reconciliation is None or reconciliation.workspace_id != job.workspace_id:
+        raise PermanentJobError(f"reconciliation {reconciliation_id!r} not found in workspace")
+    manifest_row = session.get(Manifest, reconciliation.manifest_id)
+    snapshot_row = session.get(InventorySnapshot, reconciliation.snapshot_id)
+    if manifest_row is None or snapshot_row is None:
+        raise PermanentJobError("reconciliation references a missing manifest or snapshot")
+    if snapshot_row.artifact_ref is None:
+        raise PermanentJobError("snapshot has no artifact; it has not completed successfully")
+
+    reconciliation.state = ReconciliationState.RUNNING
+    session.flush()
+
+    envelope = load_manifest(_artifact_path(manifest_row.artifact_ref, settings))
+
+    policy_document = None
+    if reconciliation.policy_revision_id is not None:
+        revision = session.get(PolicyRevision, reconciliation.policy_revision_id)
+        if revision is None:
+            raise PermanentJobError("reconciliation references a missing policy revision")
+        try:
+            policy_document = load_policy_document(
+                json.dumps(revision.rules_json), document_format="json"
+            )
+        except (PolicyValidationError, ValueError) as exc:
+            raise PermanentJobError(f"stored policy revision is invalid: {exc}") from exc
+
+    connector = NdjsonConnector(_artifact_path(snapshot_row.artifact_ref, settings))
+    try:
+        connector.validate_configuration()
+        schema = connector.inspect_target_schema()
+        try:
+            result = reconcile_small_data(
+                envelope,
+                connector,
+                target=schema.target_id,
+                scope=schema.scope,
+                policy=policy_document,
+                max_in_memory_points=_RECONCILE_SMALL_DATA_MAX_POINTS,
+            )
+        except ValueError:
+            with tempfile.TemporaryDirectory(prefix="ragledger-reconcile-") as work_dir:
+                result = reconcile_big_data(
+                    envelope,
+                    connector,
+                    target=schema.target_id,
+                    scope=schema.scope,
+                    work_dir=Path(work_dir),
+                    policy=policy_document,
+                )
+    finally:
+        connector.close()
+
+    if policy_document is not None:
+        policy_verdict = evaluate_policy(policy_document, result)
+    else:
+        policy_verdict = PolicyVerdict(policy_name="(none)", verdict="PASS", rule_results=[])
+    report = ReconciliationReport(
+        result=result,
+        policy=policy_verdict,
+        remediation=build_remediation_plan(result.findings),
+    )
+    stored = ArtifactStore(settings.artifact_store_root).put(to_json_bytes(report))
+    report_ref = f"artifacts/{stored.sha256}"
+
+    findings_by_fingerprint = {finding.fingerprint: finding for finding in result.findings}
+    for finding in findings_by_fingerprint.values():
+        evidence = finding.evidence or {}
+        session.add(
+            FindingRow(
+                workspace_id=reconciliation.workspace_id,
+                reconciliation_id=reconciliation.id,
+                fingerprint=finding.fingerprint,
+                code=finding.code.value,
+                severity=finding.severity,
+                source_hash=finding.affected_lineage.source_id,
+                chunk_hash=finding.affected_lineage.chunk_id,
+                point_hash=(
+                    hash_canonical(finding.locator.point_id)
+                    if finding.locator.point_id is not None
+                    else None
+                ),
+                expected_evidence=_wrap_evidence(evidence.get("expected")),
+                observed_evidence=_wrap_evidence(
+                    evidence.get("observed")
+                    if "observed" in evidence or "expected" in evidence
+                    else (evidence or None)
+                ),
+                artifact_ref=report_ref,
+            )
+        )
+
+    if policy_document is not None and reconciliation.policy_revision_id is not None:
+        # The DB gate enum is pass/warn/fail; INCONCLUSIVE gates as a
+        # failure (it must not pass CI), with the true verdict preserved
+        # in the evaluation's summary and the reconciliation summary.
+        result_value = {
+            "PASS": PolicyEvaluationResult.PASS,
+            "WARN": PolicyEvaluationResult.WARN,
+        }.get(policy_verdict.verdict, PolicyEvaluationResult.FAIL)
+        session.add(
+            PolicyEvaluation(
+                workspace_id=reconciliation.workspace_id,
+                reconciliation_id=reconciliation.id,
+                policy_revision_id=reconciliation.policy_revision_id,
+                result=result_value,
+                summary={"verdict": policy_verdict.verdict},
+            )
+        )
+
+    reconciliation.state = ReconciliationState.COMPLETED
+    reconciliation.summary = {
+        "verdict": policy_verdict.verdict,
+        "finding_count": len(findings_by_fingerprint),
+        "summary": result.summary.model_dump(mode="json"),
+        "ratios": result.ratios.model_dump(mode="json"),
+        "consistency": result.consistency.model_dump(mode="json"),
+        "report_artifact": report_ref,
+    }
+    session.flush()
+    logger.info(
+        "reconciliation %s: %d findings, verdict=%s",
+        reconciliation.id,
+        len(findings_by_fingerprint),
+        policy_verdict.verdict,
+    )
+
+
 def make_handlers(settings: Settings) -> dict[str, JobHandler]:
     """The job-type registry `run_pending_jobs` executes against."""
     return {
         JOB_TYPE_SCAN: lambda session, job: run_scan_job(session, job, settings=settings),
         JOB_TYPE_BUILD: lambda session, job: run_build_job(session, job, settings=settings),
         JOB_TYPE_SNAPSHOT: lambda session, job: run_snapshot_job(session, job, settings=settings),
+        JOB_TYPE_RECONCILE: lambda session, job: run_reconcile_job(session, job, settings=settings),
     }

@@ -25,15 +25,28 @@ from ragledger.cli._config import (
     ManifestSectionConfig,
     ParserConfig,
 )
-from ragledger.server.db.models.enums import BuildState, JobStatus
+from ragledger.server.db.models.enums import (
+    BuildState,
+    FindingSeverity,
+    JobStatus,
+    ReconciliationState,
+)
 
 __all__ = [
     "BuildCreateRequest",
     "BuildOut",
+    "FindingOut",
     "JobOut",
     "PipelineConfigBody",
     "PipelineConfigCreateRequest",
     "PipelineConfigOut",
+    "PolicyCreateRequest",
+    "PolicyOut",
+    "PolicyRevisionCreateRequest",
+    "PolicyRevisionOut",
+    "ReconciliationCreateRequest",
+    "ReconciliationCreateResponse",
+    "ReconciliationOut",
     "SourceAssetOut",
     "SourceCollectionCreateRequest",
     "SourceCollectionOut",
@@ -151,3 +164,68 @@ class JobOut(BaseModel):
     created_at: datetime
     started_at: datetime | None
     completed_at: datetime | None
+
+
+# --------------------------------------------------------------------------
+# Policies, reconciliations, findings (wave B slice 4)
+# --------------------------------------------------------------------------
+
+
+class PolicyCreateRequest(_RequestModel):
+    name: str = Field(min_length=1, max_length=255)
+    document: dict[str, Any]
+
+
+class PolicyRevisionCreateRequest(_RequestModel):
+    document: dict[str, Any]
+
+
+class PolicyRevisionOut(BaseModel):
+    id: uuid.UUID
+    revision_number: int
+    config_hash: str
+    document: dict[str, Any]
+    created_at: datetime
+
+
+class PolicyOut(BaseModel):
+    id: uuid.UUID
+    name: str
+    latest_revision: PolicyRevisionOut | None
+    created_at: datetime
+
+
+class ReconciliationCreateRequest(_RequestModel):
+    manifest_id: uuid.UUID
+    snapshot_id: uuid.UUID
+    policy_id: uuid.UUID | None = None
+
+
+class ReconciliationOut(BaseModel):
+    id: uuid.UUID
+    manifest_id: uuid.UUID
+    snapshot_id: uuid.UUID
+    policy_revision_id: uuid.UUID | None
+    state: ReconciliationState
+    summary: dict[str, Any] | None
+    finding_count: int
+    job_id: uuid.UUID | None
+    created_at: datetime
+
+
+class ReconciliationCreateResponse(BaseModel):
+    reconciliation: ReconciliationOut
+    job: JobOut
+
+
+class FindingOut(BaseModel):
+    id: uuid.UUID
+    fingerprint: str
+    code: str
+    severity: FindingSeverity
+    source_hash: str | None
+    chunk_hash: str | None
+    point_hash: str | None
+    expected_evidence: dict[str, Any] | None
+    observed_evidence: dict[str, Any] | None
+    created_at: datetime
