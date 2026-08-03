@@ -22,7 +22,8 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ragledger.server.api.deps import API_TOKEN_SCOPES
-from ragledger.server.db.models.enums import VectorTargetType
+from ragledger.server.api.pipeline_schemas import JobOut
+from ragledger.server.db.models.enums import ManifestStatus, SnapshotStatus, VectorTargetType
 
 __all__ = [
     "ApiTokenCreateRequest",
@@ -31,6 +32,11 @@ __all__ = [
     "AuditEventOut",
     "BootstrapRequest",
     "BootstrapResponse",
+    "ManifestOut",
+    "ManifestVerifyResponse",
+    "SignatureOut",
+    "SnapshotCreateResponse",
+    "SnapshotOut",
     "TargetCreateRequest",
     "TargetOut",
     "TargetUpdateRequest",
@@ -172,6 +178,52 @@ class TargetOut(BaseModel):
     allowlist_decision: str | None
     created_at: datetime
     updated_at: datetime
+
+
+# --------------------------------------------------------------------------
+# Manifests and snapshots (wave B slice 3)
+# --------------------------------------------------------------------------
+
+
+class SignatureOut(BaseModel):
+    key_id: str
+    signed_at: datetime
+    issuer: str | None
+
+
+class ManifestOut(BaseModel):
+    id: uuid.UUID
+    build_id: uuid.UUID | None
+    namespace: str
+    manifest_hash: str
+    status: ManifestStatus
+    source_count: int | None
+    chunk_count: int | None
+    embedding_count: int | None
+    signed: bool
+    signatures: list[SignatureOut]
+    created_at: datetime
+
+
+class ManifestVerifyResponse(BaseModel):
+    hash_valid: bool
+    overall: str
+    signatures: list[dict[str, str]]
+
+
+class SnapshotOut(BaseModel):
+    id: uuid.UUID
+    target_id: uuid.UUID
+    status: SnapshotStatus
+    point_count: int | None
+    content_hash: str | None
+    schema_hash: str | None
+    created_at: datetime
+
+
+class SnapshotCreateResponse(BaseModel):
+    snapshot: SnapshotOut
+    job: JobOut
 
 
 # --------------------------------------------------------------------------
