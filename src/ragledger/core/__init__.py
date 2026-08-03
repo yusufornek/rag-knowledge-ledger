@@ -2,7 +2,7 @@
 manifest v1 models/assembly, Ed25519 signing, and content-addressed
 artifact storage.
 
-See PROJECT_SPEC.md sections 6, 7, 11, and 33 for the specification
+See the design specification sections 6, 7, 11, and 33 for the specification
 this package implements, and the individual modules for the design
 notes behind specific choices:
 

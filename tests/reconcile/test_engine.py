@@ -1,4 +1,4 @@
-"""Small-data reconciliation engine tests, per PROJECT_SPEC.md section 14."""
+"""Small-data reconciliation engine tests, per the design specification section 14."""
 
 from __future__ import annotations
 

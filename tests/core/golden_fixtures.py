@@ -1,4 +1,4 @@
-"""Builders for the golden manifest corpus (PROJECT_SPEC.md section 42.1).
+"""Builders for the golden manifest corpus (the design specification section 42.1).
 
 Each builder here constructs a small, fully synthetic manifest using
 only `ragledger.core` public functions -- the same code path a real

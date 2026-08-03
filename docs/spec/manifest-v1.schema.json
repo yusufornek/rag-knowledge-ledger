@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ragledger.dev/schemas/manifest-v1.json",
   "title": "RAG Ledger Manifest v1",
-  "description": "Content-addressed lineage manifest for a RAG knowledge base, as defined in PROJECT_SPEC.md sections 7 and 33. This schema is a design artifact produced ahead of the manifest-building code (milestone M0); it has not yet been wired into any builder or validator.",
+  "description": "Content-addressed lineage manifest for a RAG knowledge base, as defined in the design specification sections 7 and 33. Every manifest the builder produces is validated against this schema.",
   "type": "object",
   "required": [
     "schema",
@@ -37,7 +37,7 @@
     "created_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Included in the normative signing view; see docs/architecture/adr/0002-signing-algorithm.md and PROJECT_SPEC.md section 33.1."
+      "description": "Included in the normative signing view; see docs/architecture/adr/0002-signing-algorithm.md and the design specification section 33.1."
     },
     "ledger_version": {
       "type": "string",
@@ -103,7 +103,7 @@
       "type": "string",
       "minLength": 1,
       "pattern": "^(?!/)(?![A-Za-z]:)(?!\\\\)(?!.*\\.\\.).+$",
-      "description": "Namespace-relative source URI (for example file:documents/refund.pdf). Never an absolute local path, Windows drive letter, or UNC path, per PROJECT_SPEC.md section 33.2."
+      "description": "Namespace-relative source URI (for example file:documents/refund.pdf). Never an absolute local path, Windows drive letter, or UNC path, per the design specification section 33.2."
     },
     "warning": {
       "type": "object",
@@ -362,7 +362,7 @@
             "table_caption": { "type": "string" },
             "custom": {
               "type": "object",
-              "description": "User-defined metadata namespace; reserved keys listed in PROJECT_SPEC.md section 33.4 are not permitted here."
+              "description": "User-defined metadata namespace; reserved keys listed in the design specification section 33.4 are not permitted here."
             }
           }
         },
@@ -569,7 +569,7 @@
         },
         "findings": {
           "type": "array",
-          "description": "Never contains a raw PII value, per FR-052 and PROJECT_SPEC.md section 12.1.",
+          "description": "Never contains a raw PII value, per FR-052 and the design specification section 12.1.",
           "items": {
             "type": "object",
             "required": [
@@ -671,7 +671,7 @@
             "type": "string",
             "pattern": "^(PUBLIC|USER:.+|GROUP:.+|ROLE:.+|ATTRIBUTE:[^=]+=.+)$"
           },
-          "description": "Canonical typed ACL entries per PROJECT_SPEC.md section 12.3. Deny entries are not supported in v1."
+          "description": "Canonical typed ACL entries per the design specification section 12.3. Deny entries are not supported in v1."
         },
         "extensions": { "type": "object" }
       }

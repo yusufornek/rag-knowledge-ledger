@@ -1,4 +1,4 @@
-"""Reconciliation finding taxonomy, per PROJECT_SPEC.md section 9 and 14.5.
+"""Reconciliation finding taxonomy, per the design specification section 9 and 14.5.
 
 The 23 taxonomy codes below, and their default severities, are transcribed
 directly from section 9's table -- the same table
@@ -13,7 +13,7 @@ code is a programming error, not a policy decision, so it raises unless the
 caller passes `severity_override_reason`.
 
 No finding built here ever carries a raw PII value or a raw ACL principal
-identifier (the HARD RULES this milestone was scoped under): PII evidence
+identifier (the HARD RULES this release was scoped under): PII evidence
 reuses `ragledger.governance.pii.PiiFinding`'s already-masked shape
 (`masked_preview`/`value_hmac`, never the raw match), and `mask_acl_entry`
 hashes every typed ACL entry's identifier component before it can reach a
@@ -210,7 +210,7 @@ def build_finding(
         raise SeverityOverrideError(
             f"{code.value} defaults to critical severity; downgrading to "
             f"{severity.value} requires an explicit severity_override_reason "
-            "(PROJECT_SPEC.md section 9: 'critical defaultlar güvenlik "
+            "(the design specification section 9: 'critical defaultlar güvenlik "
             "nedeniyle explicit override reason gerektirir')"
         )
     else:

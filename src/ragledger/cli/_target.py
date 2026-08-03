@@ -5,7 +5,7 @@ Extends `ragledger.connectors.config`'s two spec-defined target shapes
 `type: ndjson` shape that points at an already-written `.ndjson.zst`
 snapshot file and is read back through
 `ragledger.connectors.ndjson.NdjsonConnector`. This is what lets
-`ragledger snapshot` be exercised end to end in this milestone's test
+`ragledger snapshot` be exercised end to end in this release's test
 suite against the committed NDJSON fixtures with no live Qdrant/pgvector
 service, matching `NdjsonConnector`'s own stated purpose: replaying a
 committed snapshot exactly like a live connector.
@@ -34,7 +34,7 @@ class TargetConfigError(ValueError):
 class NdjsonSourceConfig(RagledgerModel):
     """A CLI-only target shape: replay an existing `.ndjson.zst` snapshot file.
 
-    Not part of PROJECT_SPEC.md section 35's Qdrant/pgvector target
+    Not part of the design specification section 35's Qdrant/pgvector target
     config shapes; exists purely so `ragledger snapshot` has a
     network-free, live-service-free source to run against in tests and
     offline/air-gapped use (the same rationale `ragledger.connectors.ndjson`

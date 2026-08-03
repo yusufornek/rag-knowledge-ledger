@@ -1,11 +1,10 @@
 """`ragledger key generate`: create a new Ed25519 manifest-signing keypair.
 
-PROJECT_SPEC.md section 17.1's CLI command list does not enumerate a
+The design specification's CLI command list does not enumerate a
 standalone key-generation command, only `manifest sign`/`manifest
-verify` consuming already-existing key files. `key generate` is this
-milestone's addition to make those two commands usable end to end
-without an out-of-band key-generation step; see
-`docs/reviews/m4-status-notes.md`.
+verify` consuming already-existing key files. `key generate` exists to
+make those two commands usable end to end without an out-of-band
+key-generation step.
 """
 
 from __future__ import annotations

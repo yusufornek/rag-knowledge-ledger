@@ -1,5 +1,5 @@
 """Big-data (external sort/merge) engine tests: scale, and cancel/restart
-idempotence, per PROJECT_SPEC.md section 14.2 and acceptance scenario H.
+idempotence, per the design specification section 14.2 and acceptance scenario H.
 """
 
 from __future__ import annotations

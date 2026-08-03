@@ -13,7 +13,8 @@ values: `created_at` and every other timestamp are supplied by the
 caller, so `build_manifest` called twice with the same records and the
 same explicit timestamps returns byte-identical output (see
 `canonical_manifest_bytes`). That determinism is the manifest's whole
-purpose; see PROJECT_SPEC.md section 7.2 and `docs/architecture/adr/0002-signing-algorithm.md`.
+purpose; see the design specification section 7.2 and
+`docs/architecture/adr/0002-signing-algorithm.md`.
 """
 
 from __future__ import annotations
@@ -94,7 +95,7 @@ def manifest_to_dict(manifest: ManifestEnvelope) -> dict[str, JSONValue]:
 def signing_view_bytes(manifest: ManifestEnvelope) -> bytes:
     """Return the RFC 8785 canonical bytes of the normative signing view.
 
-    Per PROJECT_SPEC.md section 11.1 and `docs/architecture/adr/0002-signing-algorithm.md`,
+    Per the design specification section 11.1 and `docs/architecture/adr/0002-signing-algorithm.md`,
     the signing view is the manifest with `signatures` forced to an
     empty array and `integrity.manifest_hash` omitted entirely (not
     null, not a placeholder -- the key is absent), which is what avoids
@@ -180,7 +181,7 @@ def build_manifest(
     the caller); `integrity.manifest_hash` is computed from the
     resulting signing view (see `signing_view_bytes`). `signatures`
     starts empty -- an unsigned manifest is a valid manifest, per
-    PROJECT_SPEC.md section 10.2 ("Signing fail: unsigned manifest
+    the design specification section 10.2 ("Signing fail: unsigned manifest
     artifact olabilir"); attach signatures afterward with
     `ragledger.core.signing.sign_manifest`.
 

@@ -1,4 +1,4 @@
-"""Reconciliation matching order, per PROJECT_SPEC.md sections 9.1 and 14.2/14.3.
+"""Reconciliation matching order, per the design specification sections 9.1 and 14.2/14.3.
 
 Section 9.1's matching order, exactly as listed there:
 
@@ -194,7 +194,7 @@ def resolve_expected_points(
     logical payload fields `ragledger.connectors.base._PROJECTABLE_FIELDS`
     lists: source_id, source_version_id, chunk_id, embedding_id, tenant,
     acl). Level 4 in this module therefore degrades to a source-version-only
-    heuristic; see `docs/reviews/m6-status-notes.md` for the full writeup.
+    heuristic.
     """
     embeddings_by_id = {embedding.id: embedding for embedding in manifest.embeddings}
     chunks_by_id = {chunk.id: chunk for chunk in manifest.chunks}

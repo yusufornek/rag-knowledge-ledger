@@ -7,15 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-
-- pgvector schema inspection now reads the declared dimension of `vector`,
-  `halfvec`, and `sparsevec` columns correctly. The pgvector extension
-  stores the dimension directly in `atttypmod`, unlike varlena types that
-  add a 4-byte header offset, so a `vector(3)` column previously reported
-  dimension -1. Found by the live integration test suite against a real
-  pgvector instance.
-
 ## 0.1.1 - 2026-07-21
 
 ### Fixed
@@ -24,6 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   paths while keeping NFC-normalized identity paths. Discovery previously
   failed with `FileNotFoundError` on non-normalizing filesystems (for example
   ext4 on Linux) when a file name contained decomposed Unicode (NFD).
+- pgvector schema inspection now reads the declared dimension of `vector`,
+  `halfvec`, and `sparsevec` columns correctly. The pgvector extension
+  stores the dimension directly in `atttypmod`, unlike varlena types that
+  add a 4-byte header offset, so a `vector(3)` column previously reported
+  dimension -1. Found by the live integration test suite against a real
+  pgvector instance.
 
 ## 0.1.0 - 2026-07-21
 
@@ -34,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Continuous integration workflow (lint, type check, test on Python 3.11,
   3.12, and 3.13).
 - Pre-code design documents: architecture decision records, threat model,
-  manifest v1 and policy v1 JSON Schemas, and the test/evidence matrix.
+  and the manifest v1 and policy v1 JSON Schemas.
 - Open source project governance files: `CONTRIBUTING.md`, `SECURITY.md`,
   `CODE_OF_CONDUCT.md`, issue and pull request templates.
 - Identity and manifest core (`ragledger.core`): RFC 8785 canonical JSON

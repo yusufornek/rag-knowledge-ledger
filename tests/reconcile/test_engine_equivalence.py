@@ -1,4 +1,4 @@
-"""Small-data vs big-data path equivalence, per PROJECT_SPEC.md section 14.
+"""Small-data vs big-data path equivalence, per the design specification section 14.
 
 Both `reconcile_small_data` and `reconcile_big_data` are built on the exact
 same `ragledger.reconcile.matching.stream_merge_join` primitive (see that

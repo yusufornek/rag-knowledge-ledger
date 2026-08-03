@@ -1,4 +1,4 @@
-"""Acceptance scenarios A-H, per PROJECT_SPEC.md section 28.
+"""Acceptance scenarios A-H, per the design specification section 28.
 
 Scenario H (scale) is covered by `test_engine_big_data.py`'s 100k-point,
 bounded-runtime, cancel/restart tests rather than duplicated here.
@@ -7,7 +7,7 @@ Scenario F (signing) exercises only the reconciliation-facing half of that
 scenario -- `PolicyDocument.requirements.manifest_signature` gating on
 signature *presence* -- not manifest tamper/verify-integrity, which is
 `ragledger.core.signing`'s already-tested responsibility, out of this
-package's scope; see `docs/reviews/m6-status-notes.md`.
+package's scope.
 """
 
 from __future__ import annotations

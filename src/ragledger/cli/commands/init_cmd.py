@@ -1,8 +1,8 @@
-"""`ragledger init`, per PROJECT_SPEC.md section 17.1 and 17.3.
+"""`ragledger init`, per the design specification section 17.1 and 17.3.
 
 Writes a `ragledger.yml` config skeleton and a `.ragledgerignore`
 example into a target directory (default: cwd). Never overwrites an
-existing file without `--force` (this milestone's hard rule).
+existing file without `--force`.
 
 The generated `embedding:` block defaults to `mode: deterministic`
 rather than section 17.3's literal `mode: local` example, so
@@ -27,7 +27,7 @@ from ragledger.cli._output import log
 
 _CONFIG_TEMPLATE = """\
 # ragledger.yml -- RAG Knowledge Ledger build configuration.
-# See PROJECT_SPEC.md section 17.3 for the full field reference.
+# See the design specification section 17.3 for the full field reference.
 version: 1
 namespace: {namespace}
 
@@ -57,7 +57,7 @@ chunker:
 # meaning -- suitable for building/inspecting a manifest immediately,
 # not for real retrieval quality.
 #
-# To declare a real local model instead, use the PROJECT_SPEC.md section
+# To declare a real local model instead, use the design specification section
 # 17.3 shape:
 #   embedding:
 #     mode: local
@@ -66,7 +66,7 @@ chunker:
 #     normalize: true
 # `revision_file` must then pin the model to an immutable commit SHA
 # (never a mutable alias like "main"). Real sentence-transformers
-# inference is not wired in this release (see IMPLEMENTATION_STATUS.md);
+# inference is not wired in this release;
 # `ragledger build` still substitutes the deterministic reference
 # embedder in `local` mode and says so in its output.
 embedding:

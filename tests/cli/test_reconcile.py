@@ -1,4 +1,4 @@
-"""Tests for `ragledger reconcile`, per PROJECT_SPEC.md section 17.1.
+"""Tests for `ragledger reconcile`, per the design specification section 17.1.
 
 Builds synthetic manifest + `.ndjson.zst` snapshot fixtures with
 `tests.reconcile.builders` (the same builders `tests/reconcile/*` uses for

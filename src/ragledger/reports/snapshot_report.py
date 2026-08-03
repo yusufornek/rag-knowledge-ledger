@@ -1,4 +1,4 @@
-"""Build and render a SNAPSHOT summary report, per PROJECT_SPEC.md section 23.
+"""Build and render a SNAPSHOT summary report, per the design specification section 23.
 
 Reads an `.ndjson.zst` snapshot file's header, streams every point to
 compute bounded aggregate statistics, and reads the trailer -- never

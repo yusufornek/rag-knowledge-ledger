@@ -1,4 +1,4 @@
-"""Reconciliation result/report models, per PROJECT_SPEC.md sections 14.4, 14.5,
+"""Reconciliation result/report models, per the design specification sections 14.4, 14.5,
 37.3, and 8.14/8.15.
 
 Layering note: this module is the shared "report shape" leaf the rest of
@@ -145,8 +145,8 @@ class PolicyVerdict(RagledgerModel):
     principal_masking: str = "hash"
     """The report masking mode applied to ACL principals (acceptance
     scenario D: "raw principal public report policy ile hash"). Fixed to
-    `"hash"` in this milestone -- see `docs/reviews/m6-status-notes.md` for
-    why a configurable mode is a documented gap, not an oversight."""
+    `"hash"` in this release; a configurable mode is a documented gap,
+    not an oversight."""
 
 
 class RemediationAction(RagledgerModel):
@@ -190,7 +190,7 @@ class RemediationPlan(RagledgerModel):
 
 class ReconciliationReport(RagledgerModel):
     """The final bundle: a reconciliation result, its policy verdict, and
-    its remediation plan (this milestone's deliverable #6)."""
+    its remediation plan."""
 
     result: ReconciliationResult
     policy: PolicyVerdict

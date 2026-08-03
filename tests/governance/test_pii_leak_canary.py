@@ -1,4 +1,4 @@
-"""PII leak canary test, per PROJECT_SPEC.md section 42.3.
+"""PII leak canary test, per the design specification section 42.3.
 
 Runs the full `ragledger.pipeline.build.build_pipeline` over the
 synthetic corpus (which contains several unique, deliberately
@@ -8,13 +8,13 @@ the produced manifest: not in `PiiFinding` evidence, not in any
 `WarningRecord`/`StageRecord` string, not anywhere in the manifest's
 full canonical JSON serialization.
 
-Scope, matching PROJECT_SPEC.md section 42.3's own framing ("Raw source
+Scope, matching the design specification section 42.3's own framing ("Raw source
 restricted artifactta canary expected; other artifact allowlist exact"):
 the *raw source bytes* stored in the content-addressed artifact store
 are an explicit, intentional exception -- they are the original
 document, and a RAG pipeline necessarily needs the real content to
-parse/chunk/embed it. The canary check here targets exactly what this
-milestone's deliverable specifies: the produced **manifest** (the
+parse/chunk/embed it. The canary check here deliberately targets
+the produced **manifest** (the
 lineage/evidence document network operators, CI, and reports actually
 consume) -- not the content-addressed artifact store's raw/parsed/chunk
 text objects, which legitimately mirror real document content the same

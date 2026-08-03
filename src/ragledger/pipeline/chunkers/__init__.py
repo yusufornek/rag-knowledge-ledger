@@ -1,6 +1,6 @@
 """Chunker adapters: the `Chunker` contract and built-in strategies.
 
-Per PROJECT_SPEC.md section 34.3/34.4 and FR-030..FR-038.
+Per the design specification section 34.3/34.4 and FR-030..FR-038.
 """
 
 from __future__ import annotations

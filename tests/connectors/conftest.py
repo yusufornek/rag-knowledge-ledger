@@ -1,10 +1,8 @@
 """Shared pytest configuration for `tests/connectors/`.
 
 Registers the `integration` marker `tests/connectors/test_integration.py`
-uses, so pytest does not warn about an unregistered marker. This is
-the appropriate place for that registration: `pyproject.toml`'s
-`[tool.pytest.ini_options]` table is owned by concurrent work on this
-milestone, not this package's test suite.
+uses, so pytest does not warn about an unregistered marker, keeping the
+marker registration local to this package's test suite.
 """
 
 from __future__ import annotations

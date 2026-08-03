@@ -1,4 +1,4 @@
-"""Content-addressed pipeline stage caching, per PROJECT_SPEC.md section 10.1.
+"""Content-addressed pipeline stage caching, per the design specification section 10.1.
 
 A cache key is derived from the stage name, the input's content hash,
 the adapter's identity and version, and the adapter config's canonical

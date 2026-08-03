@@ -1,4 +1,4 @@
-"""MANIFEST/SNAPSHOT/reconciliation report generation, per PROJECT_SPEC.md section 23.
+"""MANIFEST/SNAPSHOT/reconciliation report generation, per the design specification section 23.
 
 `ragledger.reports.manifest_report` builds a JSON-serializable summary
 dict from a `ManifestEnvelope` (`build_manifest_report`) and renders it

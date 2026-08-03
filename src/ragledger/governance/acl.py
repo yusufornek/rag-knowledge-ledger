@@ -1,4 +1,4 @@
-"""ACL and tenant assertion construction, per PROJECT_SPEC.md section 8.8/12.3
+"""ACL and tenant assertion construction, per the design specification section 8.8/12.3
 and FR-070..FR-076.
 
 Canonical ACL entry grammar (section 12.3): ``PUBLIC``, ``USER:<id>``,
@@ -10,7 +10,7 @@ in v1 (section 12.3): `validate_acl_entry` raises
 accepting and silently ignoring it.
 
 Case folding of principal identifiers never happens unless a caller
-explicitly opts in via `AclConfig.case_normalize` (PROJECT_SPEC.md
+explicitly opts in via `AclConfig.case_normalize` (the design specification
 section 40: "ACL principals case sensitivity source-system-specific...
 Default no lowercase email/group unless declared").
 
@@ -54,7 +54,7 @@ class UnsupportedAclEntryError(AclValidationError):
 def validate_acl_entry(entry: str) -> None:
     if _DENY_RE.match(entry):
         raise UnsupportedAclEntryError(
-            f"deny entries are not supported in v1 (PROJECT_SPEC.md section 12.3): {entry!r}"
+            f"deny entries are not supported in v1 (design specification 12.3): {entry!r}"
         )
     if entry == PUBLIC:
         return

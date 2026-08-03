@@ -1,6 +1,6 @@
 """Ed25519 manifest signing and verification.
 
-Implements PROJECT_SPEC.md section 11.1 and
+Implements the design specification section 11.1 and
 `docs/architecture/adr/0002-signing-algorithm.md`:
 
 1. Compute the manifest's signing view hash (``ragledger.core.manifest.compute_manifest_hash``).
@@ -26,11 +26,11 @@ differently:
 - the signature is cryptographically valid and made by a trusted key
   (`SignatureStatus.VALID`, overall `VerificationOverall.VALID_TRUSTED`).
 
-Per PROJECT_SPEC.md section 33.6, "v1 CLI supports any trusted": if
+Per the design specification section 33.6, "v1 CLI supports any trusted": if
 several signatures are attached, the manifest is `VALID_TRUSTED` as
 soon as any one of them is valid and trusted.
 
-Key management here covers the two v1 options PROJECT_SPEC.md section
+Key management here covers the two v1 options the design specification section
 11.2 names for local/CI use: a raw, unencrypted private key file with
 file mode ``0600`` (`write_private_key`/`read_private_key`), and a
 public key file used purely for verification
@@ -66,7 +66,7 @@ from ragledger.core.manifest import compute_manifest_hash
 from ragledger.core.models import ManifestEnvelope, SignatureRecord
 
 DOMAIN_SEPARATOR = b"RAGLEDGER-MANIFEST-V1\x00"
-"""The fixed domain separator PROJECT_SPEC.md section 11.1 requires be
+"""The fixed domain separator the design specification section 11.1 requires be
 signed together with the manifest hash digest, so an Ed25519 signature
 produced for this purpose can never be replayed as a signature over
 some unrelated ``RAGLEDGER-MANIFEST-V1``-shaped message from another
@@ -87,7 +87,7 @@ def generate_keypair() -> tuple[Ed25519PrivateKey, Ed25519PublicKey]:
 def write_private_key(private_key: Ed25519PrivateKey, path: Path) -> None:
     """Write a raw 32-byte Ed25519 private key to ``path`` with file mode 0600.
 
-    The key is written unencrypted; per PROJECT_SPEC.md section 11.2,
+    The key is written unencrypted; per the design specification section 11.2,
     password-based encryption of this file is a separate, optional v1
     CLI concern layered on top of this primitive, not implemented here.
     """
@@ -197,7 +197,7 @@ class SignatureStatus(StrEnum):
 
 
 class VerificationOverall(StrEnum):
-    """The manifest-level outcome of `verify_manifest`, per PROJECT_SPEC.md section 33.6."""
+    """The manifest-level outcome of `verify_manifest` (design specification 33.6)."""
 
     VALID_TRUSTED = "VALID_TRUSTED"
     """Content hash intact, and at least one attached signature is valid
@@ -238,7 +238,7 @@ def verify_manifest(
 
     ``trusted_keys`` maps a signature's `key_id` (the signer's public
     key fingerprint) to the corresponding `Ed25519PublicKey`. This
-    function never mutates ``manifest`` (PROJECT_SPEC.md section 33.6:
+    function never mutates ``manifest`` (the design specification section 33.6:
     "Verify sonucu manifesti mutate etmez").
     """
     digest_hex, message = _signing_message(manifest)

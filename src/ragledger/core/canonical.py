@@ -1,6 +1,6 @@
 """RFC 8785 (JSON Canonicalization Scheme) serialization.
 
-This module implements canonical JSON encoding per PROJECT_SPEC.md
+This module implements canonical JSON encoding per the design specification
 sections 6.4 and 7.2, and `docs/spec/manifest-v1.schema.json`'s
 `integrity.canonicalization` value of ``"RFC8785"``:
 
@@ -18,7 +18,7 @@ sections 6.4 and 7.2, and `docs/spec/manifest-v1.schema.json`'s
   ``str()`` and never routed through float formatting, so no precision
   is lost regardless of magnitude.
 - All string values (including object keys) are Unicode-normalized to
-  NFC before encoding, per PROJECT_SPEC.md section 6.4. This is an
+  NFC before encoding, per the design specification section 6.4. This is an
   intentional extension beyond plain RFC 8785 (which is silent on
   Unicode normalization): it guarantees that two Python strings which
   are canonically equivalent but differ in normalization form (for

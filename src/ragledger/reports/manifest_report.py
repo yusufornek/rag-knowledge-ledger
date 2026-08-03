@@ -1,4 +1,4 @@
-"""Build and render a MANIFEST summary report, per PROJECT_SPEC.md section 23.
+"""Build and render a MANIFEST summary report, per the design specification section 23.
 
 `build_manifest_report` produces a plain, canonical-JSON-serializable
 dict (only `str`/`int`/`float`/`bool`/`None`/`list`/`dict` values -- no

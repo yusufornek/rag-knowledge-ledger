@@ -2,7 +2,7 @@
 
 No templating engine, no external CSS/JS/fonts/images, no network
 fetch, no `<script>` tag anywhere: every report this package renders is
-a single self-contained `.html` file (PROJECT_SPEC.md section 23:
+a single self-contained `.html` file (the design specification section 23:
 "Self-contained... Active JS minimum"). Every user-controlled string
 passed through `escape` before it reaches the page, so a source URI, a
 license expression, or a warning message can never break out of its

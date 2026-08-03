@@ -1,4 +1,4 @@
-"""Streaming reconciliation engine, per PROJECT_SPEC.md section 14.
+"""Streaming reconciliation engine, per the design specification section 14.
 
 Two entry points share every finding-construction rule below them:
 

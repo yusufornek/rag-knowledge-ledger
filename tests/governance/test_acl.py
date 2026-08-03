@@ -124,7 +124,7 @@ class TestTenant:
         assert len(assertion.tenant_hash) == 64
 
     def test_typed_tenant_value_mismatch_produces_different_hash(self) -> None:
-        # PROJECT_SPEC.md section 40: tenant "1" (string) vs 1 (int) is a typed
+        # the design specification section 40: tenant "1" (string) vs 1 (int) is a typed
         # mismatch; this module only ever deals in strings, but a differently
         # spelled value must still hash differently.
         a = build_tenant_assertion("ver_x", "tenant", "1", _CREATED_AT)

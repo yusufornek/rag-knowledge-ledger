@@ -1,4 +1,4 @@
-"""Matching order precedence tests, per PROJECT_SPEC.md section 9.1."""
+"""Matching order precedence tests, per the design specification section 9.1."""
 
 from __future__ import annotations
 

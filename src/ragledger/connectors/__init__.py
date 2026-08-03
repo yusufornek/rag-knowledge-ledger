@@ -1,6 +1,6 @@
 """Read-only vector target connectors and the NDJSON snapshot format.
 
-Per PROJECT_SPEC.md section 13, this package implements:
+Per the design specification section 13, this package implements:
 
 - `ragledger.connectors.base`: the `VectorTargetConnector` interface
   and the vendor-neutral `NormalizedPoint` shape every connector

@@ -1,4 +1,4 @@
-"""Pydantic v2 models for manifest v1, per PROJECT_SPEC.md sections 7 and 33.
+"""Pydantic v2 models for manifest v1, per the design specification sections 7 and 33.
 
 These models mirror `docs/spec/manifest-v1.schema.json` field-for-field:
 every model here has a `$defs` entry in that schema with the same
@@ -9,7 +9,7 @@ a typed, IDE-checkable way to construct manifest content without hand
 building dicts, and to make constraints like "required" and "one of
 these five assertion types" impossible to violate by construction.
 
-Unknown/unobserved convention (PROJECT_SPEC.md line 21: "Kaynağı
+Unknown/unobserved convention (the design specification line 21: "Kaynağı
 gözlenmeyen metadata `unknown` olur"): nothing in this codebase invents
 a value for metadata that was not actually observed. Where the schema
 defines an explicit `"unknown"` enum member (`IndexBinding.write_status`),
@@ -18,7 +18,7 @@ use it. For free-form optional string fields that have no such member
 determine a real value should write the literal string `"unknown"`
 rather than guessing or omitting a value that downstream code will
 otherwise treat as "not applicable". Fabricated values (a guessed parser
-version, an invented license) are never acceptable, per PROJECT_SPEC.md
+version, an invented license) are never acceptable, per the design specification
 section 5's "do not let the ledger make up the truth" principle.
 """
 
@@ -66,7 +66,7 @@ module: every timestamp in a manifest is data the caller passed in,
 never `datetime.now()`, so that building the same manifest twice with
 the same inputs (including the same explicit timestamps) is
 byte-identical. See the "--reproducible" / `SOURCE_DATE_EPOCH` handling
-in PROJECT_SPEC.md section 7.2.
+in the design specification section 7.2.
 """
 
 
@@ -82,7 +82,7 @@ class RagledgerModel(BaseModel):
 
 
 class WarningRecord(RagledgerModel):
-    """A stable, bounded warning code (PROJECT_SPEC.md: "Stable codes; bounded")."""
+    """A stable, bounded warning code (the design specification: "Stable codes; bounded")."""
 
     code: str = Field(pattern=r"^[A-Z][A-Z0-9_]*$")
     message: str | None = None
@@ -112,7 +112,7 @@ BuildStatus = Literal["complete", "incomplete", "cancelled"]
 
 
 class BuildRecord(RagledgerModel):
-    """The manifest's `build` envelope field, per PROJECT_SPEC.md section 33.1."""
+    """The manifest's `build` envelope field, per the design specification section 33.1."""
 
     build_id: Id
     status: BuildStatus
@@ -140,7 +140,7 @@ class SourceRelationship(RagledgerModel):
 
 
 class SourceRecord(RagledgerModel):
-    """A source asset/version, per PROJECT_SPEC.md sections 7.3 and 33.2.
+    """A source asset/version, per the design specification sections 7.3 and 33.2.
 
     `uri` is namespace-relative (for example ``file:documents/refund.pdf``),
     never an absolute local path, Windows drive letter, or UNC path.
@@ -181,7 +181,7 @@ class OcrInfo(RagledgerModel):
 
 
 class ParseRecord(RagledgerModel):
-    """A parse run, per PROJECT_SPEC.md sections 7.4 and 33.
+    """A parse run, per the design specification sections 7.4 and 33.
 
     No machine path or secret is ever recorded here; `config_redacted` is
     a secret-free echo of the parser configuration actually used.
@@ -208,7 +208,7 @@ class ParseRecord(RagledgerModel):
 
 
 class StructuralLocator(RagledgerModel):
-    """A typed structural locator, per PROJECT_SPEC.md section 33.3.
+    """A typed structural locator, per the design specification section 33.3.
 
     Page numbers are 1-based and user-facing; the mapping to internal
     parser page indices is kept by the parser stage, not here. Character
@@ -235,7 +235,7 @@ class Tokenizer(RagledgerModel):
 class ChunkMetadata(RagledgerModel):
     """Non-reserved chunk metadata.
 
-    The reserved keys listed in PROJECT_SPEC.md section 33.4
+    The reserved keys listed in the design specification section 33.4
     (``ragledger.source_id``, ``source_version_id``, ``chunk_id``,
     ``embedding_id``, ``manifest_hash``, ``locator``, ``tenant``,
     ``acl_hash``, ``license_expression``, ``pii_status``) are populated
@@ -249,7 +249,7 @@ class ChunkMetadata(RagledgerModel):
 
 
 class ChunkRecord(RagledgerModel):
-    """A chunk revision, per PROJECT_SPEC.md sections 7.5 and 33."""
+    """A chunk revision, per the design specification sections 7.5 and 33."""
 
     id: Id
     source_version_id: Id
@@ -283,7 +283,7 @@ class EmbeddingModelInfo(RagledgerModel):
 
 
 class EmbeddingRecord(RagledgerModel):
-    """An embedding revision, per PROJECT_SPEC.md sections 7.6 and 33.
+    """An embedding revision, per the design specification sections 7.6 and 33.
 
     Raw vectors and API keys are never present here; `usage` is
     adapter-specific metadata such as input token count or batch size.
@@ -312,7 +312,7 @@ PointId = str | int | list[Any] | dict[str, Any]
 
 
 class IndexBinding(RagledgerModel):
-    """An expected index binding, per PROJECT_SPEC.md sections 7.7 and 33.
+    """An expected index binding, per the design specification sections 7.7 and 33.
 
     `target` is an alias, never a connection URL or credential.
     `point_id` preserves Qdrant's string/number point ids (FR-104) and
@@ -344,7 +344,7 @@ Sensitivity = Literal["public", "internal", "sensitive", "restricted"]
 
 
 class ArtifactRef(RagledgerModel):
-    """A content-addressed artifact reference, per PROJECT_SPEC.md section 33.5.
+    """A content-addressed artifact reference, per the design specification section 33.5.
 
     `locator` is a relative or logical object locator, never a signed
     URL or embedded credential.
@@ -516,7 +516,7 @@ class SignatureRecord(RagledgerModel):
 
 
 class ManifestEnvelope(RagledgerModel):
-    """The manifest v1 envelope, per PROJECT_SPEC.md section 7.1.
+    """The manifest v1 envelope, per the design specification section 7.1.
 
     Construct instances through `ragledger.core.manifest.build_manifest`
     rather than directly: it also computes `statistics` and

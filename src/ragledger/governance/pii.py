@@ -1,18 +1,18 @@
-"""PII detection, per PROJECT_SPEC.md section 12.1 and FR-050..FR-056.
+"""PII detection, per the design specification section 12.1 and FR-050..FR-056.
 
 Ships deterministic regex/checksum recognizers -- email, phone, IBAN
 (MOD-97 checksum), credit card (Luhn checksum), US SSN (structural
 plausibility), and Turkish national ID / TCKN (its official two-stage
 checksum) -- plus a YAML-configurable custom recognizer loader
-(FR-054). PROJECT_SPEC.md section 5.1 lists Presidio as the intended
-v1 primary analyzer; Presidio integration is a documented gap (see
-`IMPLEMENTATION_STATUS.md`) rather than a fabricated dependency, since
+(FR-054). The design specification lists Presidio as the intended
+v1 primary analyzer; Presidio integration is a documented gap rather
+than a fabricated dependency, since
 it pulls in a spaCy language model this environment does not vendor.
 
 **No raw PII value is ever returned in an evidence record.** Every
 `PiiFinding` this module produces carries only: the entity type,
 confidence, offsets, an optional short `masked_preview` (matching
-PROJECT_SPEC.md section 12.1's own example format, `jo***@ex***.com`
+the design specification section 12.1's own example format, `jo***@ex***.com`
 -- a bounded partial disclosure, never the full value), and an optional
 `value_hmac` computed with a caller-supplied, workspace-scoped secret
 via HKDF-derived key + HMAC-SHA256 (section 12.1: "HMAC key encryption
@@ -431,7 +431,7 @@ def build_pii_scan_assertion(
 
     `subject_ref` should be a `source_version_id` when scanning parsed
     source text and a `chunk_id` when scanning contextualized chunk
-    text -- PROJECT_SPEC.md section 40's edge case ("PII offsets after
+    text -- the design specification section 40's edge case ("PII offsets after
     contextual heading prefix: scanner target raw_chunk vs
     contextualized; both field distinguishes") means callers must run
     this twice with different `subject_ref`/`text` pairs to cover both,

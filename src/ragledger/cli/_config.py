@@ -1,9 +1,8 @@
-"""`ragledger.yml` project configuration, per PROJECT_SPEC.md sections 17.3 and 41.
+"""`ragledger.yml` project configuration, per the design specification sections 17.3 and 41.
 
 `RagledgerConfig` mirrors section 17.3's example field-for-field, plus
 one additive, optional field (`embedding.dimension`) this CLI needs to
-size its deterministic embedder -- see `docs/reviews/m4-status-notes.md`
-for why. Every model here is `extra="forbid"` (`_StrictModel`),
+size its deterministic embedder. Every model here is `extra="forbid"` (`_StrictModel`),
 matching section 41's "app config file unknown key hard error": a
 typo'd or stale config key is a load-time `ConfigError`, never a
 silently ignored field.
@@ -65,7 +64,7 @@ class EmbeddingConfig(_StrictModel):
     revision_file: str | None = "./model-revisions.lock"
     normalize: bool = True
     dimension: int = Field(default=32, gt=0)
-    """Not in PROJECT_SPEC.md section 17.3's literal example: sizes this
+    """Not in the design specification section 17.3's literal example: sizes this
     release's deterministic reference embedder (see
     `ragledger.cli._build_support`). Optional, additive, defaults to
     `DeterministicLocalEmbeddingProvider`'s own default dimension."""
@@ -114,7 +113,7 @@ def load_config(path: Path) -> RagledgerConfig:
 def validate_model_revisions_lock(path: Path, model_name: str) -> None:
     """Reject a build whose declared embedding model has no pinned, immutable revision.
 
-    Per PROJECT_SPEC.md section 17.3. Expected shape::
+    Per the design specification section 17.3. Expected shape::
 
         models:
           sentence-transformers/all-MiniLM-L6-v2:
@@ -130,7 +129,7 @@ def validate_model_revisions_lock(path: Path, model_name: str) -> None:
     if not path.is_file():
         raise ConfigError(
             f"model-revisions.lock not found at {path}: embedding model {model_name!r} has no "
-            "pinned revision (PROJECT_SPEC.md section 17.3)"
+            "pinned revision (the design specification section 17.3)"
         )
     try:
         raw: Any = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
@@ -148,7 +147,7 @@ def validate_model_revisions_lock(path: Path, model_name: str) -> None:
     if revision.strip().lower() in _MUTABLE_ALIASES:
         raise ConfigError(
             f"{path} pins {model_name!r} to mutable alias {revision!r}; an immutable commit SHA "
-            "or fixed version tag is required (PROJECT_SPEC.md section 17.3)"
+            "or fixed version tag is required (the design specification section 17.3)"
         )
     files = entry.get("files") if isinstance(entry, dict) else None
     if files is not None and (

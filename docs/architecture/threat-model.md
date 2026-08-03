@@ -1,13 +1,13 @@
 # Threat model
 
 This document derives a threat model from the security, governance, and
-integrity requirements in `PROJECT_SPEC.md` sections 11 (signing and
+integrity requirements in the design specification sections 11 (signing and
 integrity), 12 (PII, license, and governance), and 19 (security). It
 covers the full specified system (including the M7/M8 server and web UI
 components deferred past v0.1.0 per
 `docs/architecture/adr/0003-v0.1-release-scope.md`), since the trust
 boundaries and data sensitivity are defined by the specification
-regardless of which milestone currently implements them. This document
+regardless of which release currently implements them. This document
 is updated as components are implemented and as new components are
 designed.
 
@@ -132,10 +132,9 @@ reconciliation) never invokes an LLM at all.
 
 ## Notes on current implementation status
 
-As of M0, only the manifest v1 and policy v1 JSON Schemas exist as
-design artifacts (`docs/spec/`); no parser sandbox, connector, signing,
-or persistence code exists yet. This document describes the target
-threat model that subsequent milestones implement against, and is
-expected to gain concrete evidence references (tests, code paths) as
-each mitigation is built, per the milestone review format in
-`PROJECT_SPEC.md` section 43.4.
+The mitigations above map to concrete modules (`ragledger.core.signing`,
+`ragledger.pipeline.parsers.sandbox`, `ragledger.connectors`,
+`ragledger.governance`) and are exercised by the unit, integration, and
+canary test suites on every release. Mitigations that presuppose the
+server/API layer (workspace scoping, credential storage) are marked as
+such and land together with that layer.

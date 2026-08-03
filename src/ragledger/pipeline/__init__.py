@@ -1,4 +1,4 @@
-"""The source/parse/chunk/embed pipeline (PROJECT_SPEC.md sections 8.2-8.5, 10, 34).
+"""The source/parse/chunk/embed pipeline (the design specification sections 8.2-8.5, 10, 34).
 
 Submodules:
 

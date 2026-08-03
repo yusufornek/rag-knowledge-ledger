@@ -158,7 +158,7 @@ class TestExternalImportProvider:
 class TestUnwiredRealProviders:
     """`SentenceTransformersEmbeddingProvider`/`OpenAiEmbeddingProvider` are
     config plumbing only in this release; they must never fabricate a
-    response (PROJECT_SPEC.md section 0's "no fake connector" rule).
+    response (the design specification section 0's "no fake connector" rule).
     """
 
     def test_sentence_transformers_provider_never_makes_a_live_call(self) -> None:

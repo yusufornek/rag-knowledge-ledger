@@ -1,4 +1,4 @@
-"""`ragledger reconcile`, per PROJECT_SPEC.md section 17.1 and `ragledger.reconcile`.
+"""`ragledger reconcile`, per the design specification section 17.1 and `ragledger.reconcile`.
 
 Wires the reconciliation/policy/remediation engine (`ragledger.reconcile.engine`,
 `.policy`, `.remediation`, `.report`) into the CLI: reads a manifest and an

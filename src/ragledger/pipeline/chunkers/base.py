@@ -1,4 +1,4 @@
-"""The `Chunker` adapter contract, per PROJECT_SPEC.md section 34.3/34.4.
+"""The `Chunker` adapter contract, per the design specification section 34.3/34.4.
 
 Shared primitives every built-in chunker (`line_based`, `hierarchical`,
 `hybrid`) uses: the deterministic reference tokenizer, chunk-size config
@@ -28,7 +28,7 @@ from ragledger.pipeline.parsers.base import LedgerDocument, LedgerElement
 class TokenizerUnavailableError(RuntimeError):
     """A configured tokenizer could not be resolved.
 
-    Per PROJECT_SPEC.md section 40's edge-case decision ("Tokenizer
+    Per the design specification section 40's edge-case decision ("Tokenizer
     unavailable: build fail, not approximate whitespace tokens"): a
     build must fail outright rather than silently substituting an
     approximate word count for a tokenizer the caller asked for by
@@ -56,9 +56,9 @@ class WhitespaceTokenizer:
     Counts runs of non-whitespace characters. This is honestly named --
     it never claims to stand in for a real named tokenizer such as
     `cl100k_base` -- so declaring it in chunker config is not
-    "approximating" anything per PROJECT_SPEC.md section 40; it simply
+    "approximating" anything per the design specification section 40; it simply
     is what its name says it is. Integration with a real installed
-    tokenizer library is a documented gap (see `IMPLEMENTATION_STATUS.md`).
+    tokenizer library is a documented gap.
     """
 
     NAME = "ragledger-simple-tokenizer"
@@ -86,7 +86,7 @@ def resolve_tokenizer(name: str) -> Tokenizer:
         f"tokenizer {name!r} is not available in this ragledger installation; "
         f"only {WhitespaceTokenizer.NAME!r} ships in this release, and a build "
         "refuses to approximate an unavailable tokenizer with whitespace token "
-        "counts (PROJECT_SPEC.md section 40)"
+        "counts (the design specification section 40)"
     )
 
 
@@ -97,7 +97,7 @@ def resolve_tokenizer(name: str) -> Tokenizer:
 
 @dataclass(frozen=True)
 class ChunkCandidate:
-    """One chunk boundary a chunker proposes, per PROJECT_SPEC.md section 34.3.
+    """One chunk boundary a chunker proposes, per the design specification section 34.3.
 
     `locator` is a fully-formed `StructuralLocator` ready to feed
     directly into `ragledger.core.ids.chunk_id` and `ChunkRecord`.
@@ -136,7 +136,7 @@ class OversizedElementError(RuntimeError):
 
 @runtime_checkable
 class Chunker(Protocol):
-    """The chunker adapter contract, per PROJECT_SPEC.md section 34.3."""
+    """The chunker adapter contract, per the design specification section 34.3."""
 
     def descriptor(self) -> ChunkerDescriptor: ...
 
@@ -230,7 +230,7 @@ def parse_size_config(config: Mapping[str, Any]) -> ChunkSizeConfig:
         raise ChunkerConfigError("overlap_tokens must be a non-negative integer")
     if overlap_tokens >= max_tokens:
         raise ChunkerConfigError(
-            "overlap_tokens must be strictly less than max_tokens (PROJECT_SPEC.md section 34.4)"
+            "overlap_tokens must be strictly less than max_tokens (design specification 34.4)"
         )
     if not isinstance(min_tokens, int) or isinstance(min_tokens, bool) or min_tokens < 0:
         raise ChunkerConfigError("min_tokens must be a non-negative integer")

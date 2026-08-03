@@ -1,4 +1,4 @@
-"""pgvector connector, per PROJECT_SPEC.md sections 8.12, 13.4, and 35.2.
+"""pgvector connector, per the design specification sections 8.12, 13.4, and 35.2.
 
 Talks to PostgreSQL through `psycopg` (psycopg3) directly; there is no
 SQLAlchemy dependency available to this package, so where section 35.1
@@ -190,7 +190,7 @@ def _point_id_text(point_id: PointId) -> str:
 
 
 class PgvectorConnector(VectorTargetConnector[dict[str, Any]]):
-    """A read-only pgvector connector, per PROJECT_SPEC.md section 8.12.
+    """A read-only pgvector connector, per the design specification section 8.12.
 
     For production use, construct with just ``config`` (and optionally
     ``env``): a real `psycopg.Connection` is opened lazily, on first

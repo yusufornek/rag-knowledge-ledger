@@ -1,4 +1,4 @@
-"""Stable, content-derived record identifiers, per PROJECT_SPEC.md section 6.3.
+"""Stable, content-derived record identifiers, per the design specification section 6.3.
 
 Every ID is a prefixed multihash-style string: ``<prefix>_sha256_<base32>``,
 where ``<base32>`` is the unpadded, lowercase RFC 4648 base32 encoding of
@@ -20,7 +20,7 @@ The chosen prefixes are:
 - ``ver`` -- ``source_version_id``
 - ``prs`` -- ``parse_run_id``
 - ``chk`` -- ``chunk_id`` (matches the example given directly in
-  PROJECT_SPEC.md section 6.3: ``chk_sha256_<base32>``)
+  the design specification section 6.3: ``chk_sha256_<base32>``)
 - ``emb`` -- ``embedding_id``
 - ``idx`` -- ``index_binding_id``
 """

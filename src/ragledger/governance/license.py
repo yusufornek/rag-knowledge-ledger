@@ -1,4 +1,4 @@
-"""SPDX license detection and assertion, per PROJECT_SPEC.md section 12.2 and FR-060..FR-064.
+"""SPDX license detection and assertion (design specification 12.2, FR-060..FR-064).
 
 Sources evaluated, per FR-060: an explicit user assertion (an
 operator-supplied override keyed by source URI), a sidecar metadata
@@ -11,7 +11,7 @@ fact** (FR-060: "content text tahmini v1 fact değildir") -- this module
 never scans document body prose looking for phrases like "licensed
 under MIT".
 
-Precedence: PROJECT_SPEC.md section 12.2 states explicitly "sidecar >
+Precedence: the design specification section 12.2 states explicitly "sidecar >
 frontmatter > path policy > repository default > NOASSERTION" but does
 not place `user_assertion` (present as FR-060's first-listed source and
 as `LicenseMethod`'s first enum member) in that chain. This module
@@ -32,8 +32,7 @@ against `_KNOWN_SPDX_IDENTIFIERS`; anything unrecognized becomes
 `NOASSERTION` (FR-061) rather than being partially accepted or guessed.
 `_KNOWN_SPDX_IDENTIFIERS`/`_LICENSE_LIST_VERSION` are an honest, small,
 hand-maintained subset -- not the real, network-fetched official SPDX
-license list -- see `_LICENSE_LIST_VERSION`'s docstring and
-`IMPLEMENTATION_STATUS.md`.
+license list -- see `_LICENSE_LIST_VERSION`'s docstring.
 """
 
 from __future__ import annotations
@@ -55,7 +54,7 @@ _LICENSE_LIST_VERSION = "ragledger-embedded-subset-1"
 environment has no network access to fetch or pin the real upstream
 list. This is ragledger's own identifier for the small, hand-maintained
 identifier subset in `_KNOWN_SPDX_IDENTIFIERS`, reported honestly as
-what it is (PROJECT_SPEC.md section 0 rule 2: never fabricate a fact).
+what it is (the design specification section 0 rule 2: never fabricate a fact).
 Vendoring the full official list is a documented gap.
 """
 

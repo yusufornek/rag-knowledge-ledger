@@ -1,6 +1,6 @@
 """Parser adapters: the `DocumentParser` contract, native implementations, and sandbox.
 
-Per PROJECT_SPEC.md section 34.1 and 8.3.
+Per the design specification section 34.1 and 8.3.
 """
 
 from __future__ import annotations

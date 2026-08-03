@@ -1,4 +1,4 @@
-"""Golden manifest corpus tests (PROJECT_SPEC.md section 42.1).
+"""Golden manifest corpus tests (the design specification section 42.1).
 
 Two independent things are checked for each fixture in
 `tests/fixtures/golden/`:
@@ -10,7 +10,7 @@ Two independent things are checked for each fixture in
    means the canonicalization, hashing, ID derivation, or model shape
    changed in a way that is not backward compatible -- which may be an
    intentional, reviewed change (see `scripts/regenerate_golden_manifests.py`
-   and PROJECT_SPEC.md section 42.1's "Golden update otomatik CI'da
+   and the design specification section 42.1's "Golden update otomatik CI'da
    yapılmaz"), but must never happen silently.
 """
 
@@ -47,7 +47,7 @@ class TestGoldenManifests:
         assert actual == expected, (
             f"{filename} no longer matches the committed golden bytes. "
             "If this change is intentional, regenerate the fixture and note "
-            "it in the changelog per PROJECT_SPEC.md section 42.1."
+            "it in the changelog per the design specification section 42.1."
         )
 
     def test_golden_file_has_no_trailing_newline(self, filename: str, builder) -> None:

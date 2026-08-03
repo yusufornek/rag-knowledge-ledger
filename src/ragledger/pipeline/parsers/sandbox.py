@@ -1,4 +1,4 @@
-"""Untrusted parser execution sandbox (PROJECT_SPEC.md section 8.3, 34.6).
+"""Untrusted parser execution sandbox (the design specification section 8.3, 34.6).
 
 Runs a `DocumentParser.parse` call in a separate subprocess, so that a
 parser which crashes, hangs, or tries to allocate unbounded memory or

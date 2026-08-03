@@ -1,4 +1,4 @@
-"""`ragledger report manifest|snapshot`, per PROJECT_SPEC.md section 17.1 and 23.
+"""`ragledger report manifest|snapshot`, per the design specification section 17.1 and 23.
 
 `--format json` writes the canonical (RFC 8785) JSON bytes of
 `ragledger.reports.build_manifest_report`/`build_snapshot_report`;

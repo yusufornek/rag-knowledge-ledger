@@ -1,4 +1,4 @@
-"""Remediation plan tests, per PROJECT_SPEC.md section 8.14 (FR-133..FR-135)."""
+"""Remediation plan tests, per the design specification section 8.14 (FR-133..FR-135)."""
 
 from __future__ import annotations
 

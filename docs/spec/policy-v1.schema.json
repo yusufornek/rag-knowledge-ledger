@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://ragledger.dev/schemas/policy-v1.json",
   "title": "RAG Ledger Policy v1",
-  "description": "Typed policy configuration schema, derived from PROJECT_SPEC.md sections 8.14 (FR-130..FR-135), 9 (reconciliation taxonomy), 12.4 (policy example), and 14.4 (ratios). Unknown keys are a hard error (FR-130), so every object below sets additionalProperties to false. This schema is a design artifact produced ahead of the policy evaluation code (milestone M0); it is not yet enforced by any CLI command.",
+  "description": "Typed policy configuration schema, derived from the design specification sections 8.14 (FR-130..FR-135), 9 (reconciliation taxonomy), 12.4 (policy example), and 14.4 (ratios). Unknown keys are a hard error (FR-130), so every object below sets additionalProperties to false. Policy files are validated against this schema before evaluation.",
   "type": "object",
   "required": ["version", "name", "requirements", "findings"],
   "additionalProperties": false,

@@ -1,6 +1,6 @@
 """PII/principal masking canary: raw values must never appear in a
-serialized reconciliation report, per the HARD RULES this milestone was
-scoped under and PROJECT_SPEC.md acceptance scenarios D and E.
+serialized reconciliation report, per the HARD RULES this release was
+scoped under and the design specification acceptance scenarios D and E.
 
 Uses `ragledger.governance.pii`'s real scanner (not a synthetic stand-in),
 so the masked evidence exercised here is the actual masking convention the

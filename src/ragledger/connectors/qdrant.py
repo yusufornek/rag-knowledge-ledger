@@ -1,4 +1,4 @@
-"""Qdrant REST connector, per PROJECT_SPEC.md sections 8.11, 13.3, and 35.1.
+"""Qdrant REST connector, per the design specification sections 8.11, 13.3, and 35.1.
 
 Talks to Qdrant's HTTP API directly with `httpx` (no `qdrant-client`
 dependency). Every request this connector issues goes through a single
@@ -11,7 +11,7 @@ verb is Qdrant's read-only paginated query operation) and raises
 or a POST to any other path -- before the request is ever sent over
 the wire. There is no method on `QdrantConnector` that could construct
 a write request in the first place; the guard exists as the section
-42.2 runtime backstop the milestone requires proof of.
+42.2 runtime backstop the design specification requires proof of.
 
 Consistency (section 13.3): Qdrant's scroll API gives no point-in-time
 snapshot guarantee, so every pass is `ConsistencyMode.BEST_EFFORT_LIVE`.
@@ -175,7 +175,7 @@ def _parse_vector_fields(vectors_config: Any) -> tuple[VectorFieldSchema, ...]:
 
 
 class QdrantConnector(VectorTargetConnector[dict[str, Any]]):
-    """A read-only Qdrant REST connector, per PROJECT_SPEC.md section 8.11."""
+    """A read-only Qdrant REST connector, per the design specification section 8.11."""
 
     def __init__(
         self,

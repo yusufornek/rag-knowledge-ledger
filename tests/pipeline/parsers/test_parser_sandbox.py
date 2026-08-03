@@ -1,6 +1,6 @@
 """Tests for `ragledger.pipeline.parsers.sandbox`: isolation of untrusted parsing.
 
-Covers PROJECT_SPEC.md section 8.3's sandbox requirement: a
+Covers the design specification section 8.3's sandbox requirement: a
 crashing/hanging/oversized-output parser must yield a `ParseOutcome`
 with `status="fail"`, never a raised exception or a hung/crashed test
 process. `tests/pipeline/parsers/_malicious_stub_parsers.py` provides

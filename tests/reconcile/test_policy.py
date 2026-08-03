@@ -1,4 +1,4 @@
-"""Policy loading/evaluation tests, per PROJECT_SPEC.md sections 8.14 and 12.4."""
+"""Policy loading/evaluation tests, per the design specification sections 8.14 and 12.4."""
 
 from __future__ import annotations
 

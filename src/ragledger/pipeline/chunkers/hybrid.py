@@ -6,7 +6,7 @@ whole elements of the previous chunk (up to `overlap_tokens` worth) are
 repeated at the start of the next chunk within the same section. The
 repeated text naturally hashes differently in each chunk because each
 chunk's `StructuralLocator` (element refs, character offsets, ordinal)
-differs, per PROJECT_SPEC.md section 34.3: "Overlap neighbor
+differs, per the design specification section 34.3: "Overlap neighbor
 relationship; overlapping text iki chunkta doğal olarak hash farklı
 locator/context ile."
 """

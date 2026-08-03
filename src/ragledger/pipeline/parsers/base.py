@@ -1,7 +1,7 @@
-"""The `DocumentParser` adapter contract, per PROJECT_SPEC.md section 34.1.
+"""The `DocumentParser` adapter contract, per the design specification section 34.1.
 
 `LedgerDocument`/`LedgerElement` are the stable structural representation
-every native parser maps its own output onto (PROJECT_SPEC.md section
+every native parser maps its own output onto (the design specification section
 34.2: "adapter stable `LedgerDocument` representation'a map eder"), so
 that a specific parser's internal schema never leaks into the manifest's
 public contract. They are plain pydantic models (reusing
@@ -45,13 +45,13 @@ ElementKind = Literal[
     "footnote",
     "unknown",
 ]
-"""The element kinds `LedgerDocument` can carry, per PROJECT_SPEC.md section 34.2."""
+"""The element kinds `LedgerDocument` can carry, per the design specification section 34.2."""
 
 ParseStatus = Literal["success", "partial", "fail"]
 
 
 class LedgerElement(RagledgerModel):
-    """One structural element of a parsed document (PROJECT_SPEC.md section 34.2).
+    """One structural element of a parsed document (the design specification section 34.2).
 
     `id` is stable only within one parse run (it is what
     `StructuralLocator.element_ids` references), not a global manifest
@@ -76,7 +76,7 @@ class LedgerElement(RagledgerModel):
 
 
 class LedgerDocument(RagledgerModel):
-    """A parser's stable output representation (PROJECT_SPEC.md section 34.1/34.2).
+    """A parser's stable output representation (the design specification section 34.1/34.2).
 
     This is what gets serialized as the canonical JSON artifact
     referenced by `ParseRecord.parsed_artifact_ref` (FR-024).
@@ -93,7 +93,7 @@ class LedgerDocument(RagledgerModel):
 
 @dataclass(frozen=True)
 class ParseLimits:
-    """Resource caps enforced around one parse run (PROJECT_SPEC.md FR-014).
+    """Resource caps enforced around one parse run (the design specification FR-014).
 
     Defaults match the spec's stated defaults: 100 MiB max source size,
     500 PDF pages. `max_output_bytes` and `timeout_seconds` bound the
@@ -110,7 +110,7 @@ class ParseLimits:
 
 
 class ParseOutcome(RagledgerModel):
-    """The result of one parser run (PROJECT_SPEC.md section 34.1).
+    """The result of one parser run (the design specification section 34.1).
 
     `consumed_input_hash` is always populated, even on failure: it
     records the exact bytes the parser was handed, independent of
@@ -130,12 +130,12 @@ class ParseOutcome(RagledgerModel):
 
 
 class ParserDescriptor(RagledgerModel):
-    """A parser adapter's immutable identity (PROJECT_SPEC.md section 34.1).
+    """A parser adapter's immutable identity (the design specification section 34.1).
 
     Never hand-typed: `version` for a distribution-backed parser is
     resolved through `resolve_distribution_version`; a native parser
     with no backing distribution reports its own module-level revision
-    constant. Both are real, observed values, never a guess (PROJECT_SPEC.md
+    constant. Both are real, observed values, never a guess (the design specification
     section 0 rule 2).
     """
 
@@ -158,7 +158,7 @@ def resolve_distribution_version(distribution_name: str) -> str:
 
 @runtime_checkable
 class DocumentParser(Protocol):
-    """The parser adapter contract, per PROJECT_SPEC.md section 34.1.
+    """The parser adapter contract, per the design specification section 34.1.
 
     Implementations must never perform network I/O (FR-025), never
     execute embedded files/macros (FR-026), and must return a `fail`

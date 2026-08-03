@@ -1,10 +1,10 @@
-"""`ragledger build`, per PROJECT_SPEC.md section 17.1 and 10.2.
+"""`ragledger build`, per the design specification section 17.1 and 10.2.
 
 Runs the full discover -> parse -> chunk -> scan -> embed -> manifest
 pipeline (`ragledger.pipeline.build.build_pipeline`) against a
 `ragledger.yml` config and writes a canonical manifest.
 
-Exit code interpretation (PROJECT_SPEC.md section 17.1's table has no
+Exit code interpretation (the design specification section 17.1's table has no
 row specifically for "build produced an incomplete manifest"): a
 config/input error (bad YAML, unknown chunker, missing model-revisions
 lock) is `1`; a successful `complete` build is `0`; a `build.status ==

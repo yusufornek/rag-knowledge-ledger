@@ -12,7 +12,7 @@ Two target config shapes are modeled here, matching section 35.1 and
   snapshot header without ever leaking a credential (section 35.1:
   "Web stored config `api_key_env` değil encrypted credential ref" --
   v1's local/CLI config is the env-var-name form this module
-  implements; the encrypted-credential-ref form is a later-milestone,
+  implements; the encrypted-credential-ref form is a later-release,
   server-side concern).
 - Validate identifiers (Qdrant collection name; pgvector schema, table,
   column, and `where`-clause column names) against a bounded, safe
@@ -25,12 +25,12 @@ Two target config shapes are modeled here, matching section 35.1 and
   connector that resolves every point's `payload_projection` field to
   ``None`` without anyone noticing at config time.
 
-`run_preflight` implements this milestone's preflight-check
-deliverable: reachability, auth, and (when the caller supplies the
+`run_preflight` implements the preflight checks: reachability, auth,
+and (when the caller supplies the
 manifest's expected embedding dimension) an embedding-dimension-vs-
 collection-dimension check, which is exactly the input
 reconciliation's `EMBEDDING_DIMENSION_MISMATCH` finding (section 9)
-needs -- computing that finding itself is a later milestone's job,
+needs -- computing that finding itself is a later release's job,
 not this connector layer's.
 """
 
@@ -139,7 +139,7 @@ class QdrantSnapshotConfig(RagledgerModel):
 
 
 class QdrantTargetConfig(RagledgerModel):
-    """A Qdrant target configuration, per PROJECT_SPEC.md section 35.1.
+    """A Qdrant target configuration, per the design specification section 35.1.
 
     `endpoint` must be a plain ``http``/``https`` URL with no embedded
     userinfo (``user:pass@host``) and no query string -- credentials
@@ -244,7 +244,7 @@ WhereValue = str | int | float | bool | list[str] | list[int] | list[float]
 
 
 class PgvectorTargetConfig(RagledgerModel):
-    """A pgvector target configuration, per PROJECT_SPEC.md section 35.2.
+    """A pgvector target configuration, per the design specification section 35.2.
 
     `where` is restricted to configured, validated column names with
     scalar or list values, generating a parameterized equality/`IN`
@@ -317,7 +317,7 @@ class PgvectorTargetConfig(RagledgerModel):
 
 @dataclass(frozen=True)
 class PreflightResult:
-    """The outcome of `run_preflight`, per this milestone's preflight-check deliverable."""
+    """The outcome of `run_preflight`."""
 
     reachable: bool
     auth_ok: bool

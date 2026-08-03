@@ -1,4 +1,4 @@
-"""Reconciliation and policy engine (M6), per PROJECT_SPEC.md sections 8.13, 8.14, 9, and 14.
+"""Reconciliation and policy engine (design specification sections 8.13, 8.14, 9, and 14).
 
 This package compares a manifest's *expected* index state (index bindings
 joined with their embedding/chunk/source lineage) against a target's

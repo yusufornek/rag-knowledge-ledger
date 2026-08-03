@@ -1,6 +1,6 @@
-"""Policy v1 loading and evaluation, per PROJECT_SPEC.md sections 8.14 and 12.4.
+"""Policy v1 loading and evaluation, per the design specification sections 8.14 and 12.4.
 
-`docs/spec/policy-v1.schema.json` was drafted in milestone M0 as a design
+`docs/spec/policy-v1.schema.json` was drafted ahead of this module as a design
 artifact ("not yet enforced by any CLI command", per the schema's own
 `description`); this module is where it becomes load-bearing:
 `load_policy_document` validates a raw YAML/JSON document against that exact
@@ -9,8 +9,7 @@ typed `PolicyDocument` model below, and `evaluate_policy` turns a loaded
 policy plus a `ragledger.reconcile.report.ReconciliationResult` into a
 `PolicyVerdict`.
 
-Schema gap, noted honestly rather than silently worked around (see
-`docs/reviews/m6-status-notes.md` for the full writeup): the schema's
+Schema gap, noted honestly rather than silently worked around: the schema's
 `$defs.rule` object (FR-131's "typed rules... category count/ratio,
 severity, source path/media/license/PII/ACL/tenant, age, completeness") has
 no field naming WHICH ratio a `category: "ratio"` rule checks, and no

@@ -1,10 +1,10 @@
-"""Vector target connector interface, per PROJECT_SPEC.md section 13.1-13.2.
+"""Vector target connector interface, per the design specification section 13.1-13.2.
 
 This module owns three things every connector implementation shares:
 
 - `NormalizedPoint`: the vendor-neutral shape a connector reduces an
   observed index point to (section 13.2's exact field list). This is
-  the only representation reconciliation (a later milestone) and the
+  the only representation reconciliation (a later release) and the
   NDJSON snapshot format ever see; no connector-specific raw record
   type leaks past `normalize_point`.
 - `VectorTargetConnector`: the abstract read-only interface (section
@@ -12,7 +12,7 @@ This module owns three things every connector implementation shares:
   exhaustive: `validate_configuration`, `test_connection`,
   `inspect_target_schema`, `iterate_points`, `normalize_point`,
   `estimate_count`, `close`, plus a capabilities probe and a
-  consistency-info accessor the milestone's task explicitly calls for.
+  consistency-info accessor.
   There is no mutation method anywhere on this class, and none may be
   added -- per section 13.1, "Mutation metodu interface'te yoktur"
   (there is no mutation method in the interface) and section 42.2's
@@ -328,7 +328,7 @@ class TargetSchema:
 
 @dataclass(frozen=True)
 class ConnectorCapabilities:
-    """A connector's capability probe, per this milestone's task description."""
+    """A connector's capability probe."""
 
     target_type: str
     supports_resume: bool
@@ -355,7 +355,7 @@ RawRecordT = TypeVar("RawRecordT")
 
 
 class VectorTargetConnector(ABC, Generic[RawRecordT]):
-    """The read-only vector target connector interface, per PROJECT_SPEC.md section 13.1.
+    """The read-only vector target connector interface, per the design specification section 13.1.
 
     Implementations: `ragledger.connectors.qdrant.QdrantConnector`,
     `ragledger.connectors.pgvector.PgvectorConnector`, and

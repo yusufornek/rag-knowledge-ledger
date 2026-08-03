@@ -1,4 +1,4 @@
-"""SHA-256 content hashing, per PROJECT_SPEC.md section 6.2 and 6.4.
+"""SHA-256 content hashing, per the design specification section 6.2 and 6.4.
 
 Every hash string produced here is a lowercase, unpadded, 64-character
 hexadecimal SHA-256 digest, matching the ``sha256Hash`` pattern

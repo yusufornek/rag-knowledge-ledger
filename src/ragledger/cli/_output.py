@@ -1,10 +1,10 @@
 """Shared stdout/stderr conventions for `ragledger.cli` commands.
 
-Per PROJECT_SPEC.md section 17.1: "JSON output stdout, logs stderr."
+Per the design specification section 17.1: "JSON output stdout, logs stderr."
 `log` is for human-readable status/progress lines (stderr); a command's
 final structured result is printed with `emit_text` (stdout). Nothing in
 this module ever receives or echoes a secret -- callers are responsible
-for redacting before they call in, per this milestone's "secrets never
+for redacting before they call in, per this release's "secrets never
 echoed" rule; there is no formatting convention here that could
 accidentally surface one.
 """

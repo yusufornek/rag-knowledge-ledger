@@ -1,11 +1,11 @@
-"""`ragledger target add`, per PROJECT_SPEC.md section 17.1 and 35.
+"""`ragledger target add`, per the design specification section 17.1 and 35.
 
 Validates a target config file against the declared type's schema, then
 (by default) runs `ragledger.connectors.config.run_preflight` against
 the live target: reachability, auth, and -- when `--expected-dimension`
 is given -- an embedding-dimension-vs-collection-dimension check. Pass
 `--no-check` to validate the config file's shape only, with no network
-call (used by this milestone's own tests, which must not depend on a
+call (used by this release's own tests, which must not depend on a
 live Qdrant/pgvector service).
 """
 

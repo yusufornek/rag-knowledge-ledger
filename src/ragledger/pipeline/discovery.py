@@ -1,4 +1,4 @@
-"""Filesystem source discovery, per PROJECT_SPEC.md section 8.2 (FR-010..FR-017).
+"""Filesystem source discovery, per the design specification section 8.2 (FR-010..FR-017).
 
 Recursively walks a root directory, applies `.gitignore`- and
 `.ragledgerignore`-style ignore rules, streams a SHA-256 content hash
@@ -11,7 +11,7 @@ Known simplification, documented rather than hidden: only a root-level
 `.gitignore`/`.ragledgerignore` is read (not per-directory nested
 ignore files layered git-style down the tree). This covers the common
 single-ignore-file case exactly; full nested-directory gitignore
-layering is tracked as a gap in `IMPLEMENTATION_STATUS.md`.
+layering is a known gap.
 """
 
 from __future__ import annotations
@@ -49,7 +49,7 @@ class SymlinkEscapesRootError(DiscoveryError):
 
 class SourceChangedDuringReadError(DiscoveryError):
     """A file's size/mtime changed between the pre- and post-hash stat,
-    even after one retry (PROJECT_SPEC.md section 40).
+    even after one retry (the design specification section 40).
     """
 
 
@@ -262,7 +262,7 @@ def _build_source_record(
             break
         if attempt == 1:
             raise SourceChangedDuringReadError(
-                f"{relative} changed while being hashed (PROJECT_SPEC.md section 40)"
+                f"{relative} changed while being hashed (the design specification section 40)"
             )
     assert result is not None  # the loop always assigns or raises
     media_type = sniff_media_type(absolute, result.sample)

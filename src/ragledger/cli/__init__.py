@@ -1,4 +1,4 @@
-"""Command-line entry point for ragledger, per PROJECT_SPEC.md section 17.1.
+"""Command-line entry point for ragledger, per the design specification section 17.1.
 
 This package replaces the earlier single-module `ragledger.cli`;
 `pyproject.toml`'s `[project.scripts]` entry (``ragledger =
@@ -10,9 +10,8 @@ registered here; this module's only job is wiring, not command logic.
 Commands implemented: `init`, `build`, `manifest validate/sign/verify`,
 `key generate`, `target add`, `snapshot`, `report manifest/snapshot`,
 `reconcile`, `version`. `inspect`, `diff`, `doctor`, and `serve` from
-PROJECT_SPEC.md section 17.1's full command list remain out of scope for
-this release -- see IMPLEMENTATION_STATUS.md's FR table and milestone
-plan for what M7/M8 add.
+the design specification's full command list remain out of scope for
+this release; they arrive with the server and web layers.
 """
 
 from __future__ import annotations

@@ -1,7 +1,7 @@
 """End-to-end pipeline orchestration: discover -> parse -> chunk -> scan -> embed -> manifest.
 
-Per PROJECT_SPEC.md section 10's pipeline diagram and 10.2's failure
-behavior. `build_pipeline` is the single entry point this milestone
+Per the design specification section 10's pipeline diagram and 10.2's failure
+behavior. `build_pipeline` is the single entry point this release
 ships: it wires `ragledger.pipeline.discovery`, `.parsers`, `.chunkers`,
 `.embedding`, `.cache`, and `ragledger.governance.{pii,license,acl}`
 together and calls `ragledger.core.manifest.build_manifest` to produce
@@ -12,7 +12,7 @@ caller-supplied (never wall-clock or random), every adapter used here
 is deterministic (the shipped parsers, chunkers, and
 `DeterministicLocalEmbeddingProvider`), and every record list is sorted
 by a stable key before being handed to `build_manifest`. With
-`BuildConfig.reproducible=True` (PROJECT_SPEC.md section 7.2's
+`BuildConfig.reproducible=True` (the design specification section 7.2's
 `--reproducible` mode), calling `build_pipeline` twice with the same
 source tree and the same `BuildConfig` produces byte-identical
 canonical manifest bytes (`ragledger.core.manifest.canonical_manifest_bytes`).
@@ -35,7 +35,7 @@ Scope notes (honest gaps, not silent ones):
   a chunking pass, or an embedding call.
 - Per-chunk PII scanning covers contextualized chunk text only (the
   actual embedding input, and the most policy-relevant target); source
-  level scanning covers the pre-chunking parsed text. PROJECT_SPEC.md
+  level scanning covers the pre-chunking parsed text. The design specification
   section 40's edge case about `raw_chunk` vs `contextualized` scan
   targets being independently selectable is not fully implemented for
   the intermediate chunk-boundary-raw-text case.
@@ -128,7 +128,7 @@ class PiiPolicyConfig:
     """A minimal, build-time-only PII policy: which entity types block embedding.
 
     Full policy verdicts (PASS/WARN/FAIL/INCONCLUSIVE) are M6 scope;
-    this only implements PROJECT_SPEC.md section 10.2's stated build
+    this only implements the design specification section 10.2's stated build
     time behavior directly: "PII/license policy block: embedding/index
     binding default skip."
     """
@@ -164,7 +164,7 @@ class BuildConfig:
     signing_issuer: str | None = None
     reproducible: bool = False
     """When true, `ParseRecord.duration_seconds` is fixed to `0.0` instead
-    of the real measured parse duration (PROJECT_SPEC.md section 7.2's
+    of the real measured parse duration (the design specification section 7.2's
     `--reproducible` mode). Real wall-clock duration is legitimate,
     non-fabricated telemetry -- but by definition it varies from run to
     run on the same input, which is fundamentally incompatible with

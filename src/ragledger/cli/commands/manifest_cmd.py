@@ -1,9 +1,8 @@
-"""`ragledger manifest validate|sign|verify`, per PROJECT_SPEC.md sections 17.1, 11, and 33.6.
+"""`ragledger manifest validate|sign|verify` (design specification sections 17.1, 11, 33.6).
 
 Exit code interpretation for `verify` (there is no single spec row that
 enumerates all four `VerificationOverall` outcomes against the section
-17.1 exit table, so this is a documented choice -- see
-`docs/reviews/m4-status-notes.md`):
+17.1 exit table, so this is a documented choice):
 
 - `VALID_TRUSTED` -> `0`.
 - `VALID_UNTRUSTED` -> `2` ("Findings var, gate fail değil"): the
@@ -147,7 +146,7 @@ def sign(
         help="Unix timestamp for signed_at; falls back to SOURCE_DATE_EPOCH, then current time.",
     ),
 ) -> None:
-    """Attach an Ed25519 signature to a manifest, per PROJECT_SPEC.md section 11.1."""
+    """Attach an Ed25519 signature to a manifest, per the design specification section 11.1."""
     run_command(lambda: _sign_impl(manifest, key_file, output, issuer, epoch))
 
 
@@ -204,7 +203,7 @@ def verify(
         help="Artifact store root for --deep verification.",
     ),
 ) -> None:
-    """Verify a manifest's signatures and content hash, per PROJECT_SPEC.md section 33.6."""
+    """Verify a manifest's signatures and content hash (design specification 33.6)."""
     run_command(lambda: _verify_impl(manifest, public_key, deep, artifacts_dir))
 
 

@@ -1,4 +1,4 @@
-"""The `EmbeddingProvider` adapter contract, per PROJECT_SPEC.md section 34.5.
+"""The `EmbeddingProvider` adapter contract, per the design specification section 34.5.
 
 Ships one fully working provider, `DeterministicLocalEmbeddingProvider`:
 a seeded hash-projection reference embedder that produces unit-normalized
@@ -18,7 +18,7 @@ the manifest and build-config machinery around a *named, versioned*
 real provider already exists -- but their `embed()` deliberately raises
 `ProviderNotAvailableError` rather than making a live network call or a
 model-loading attempt neither this environment nor its test suite can
-depend on. This is a documented, honest gap; see `IMPLEMENTATION_STATUS.md`.
+depend on. This is a documented, honest gap.
 
 `ExternalImportEmbeddingProvider` covers FR-047: wrapping vectors
 computed entirely outside ragledger, where any metadata field the
@@ -47,7 +47,7 @@ from ragledger.pipeline.chunkers.base import WhitespaceTokenizer
 
 
 class EmbeddingModelDescriptor(RagledgerModel):
-    """An embedding provider's immutable identity, per PROJECT_SPEC.md section 34.5."""
+    """An embedding provider's immutable identity, per the design specification section 34.5."""
 
     provider: str = Field(min_length=1)
     name: str = Field(min_length=1)
@@ -82,7 +82,7 @@ class ProviderNotAvailableError(RuntimeError):
 
 @runtime_checkable
 class EmbeddingProvider(Protocol):
-    """The embedding adapter contract, per PROJECT_SPEC.md section 34.5."""
+    """The embedding adapter contract, per the design specification section 34.5."""
 
     def descriptor(self) -> EmbeddingModelDescriptor: ...
 
@@ -316,7 +316,7 @@ class SentenceTransformersEmbeddingProvider:
     `ProviderNotAvailableError` rather than a fabricated response.
     Wiring this to the real `sentence-transformers` library (a large
     optional dependency with its own model download/cache semantics) is
-    a documented gap; see `IMPLEMENTATION_STATUS.md`.
+    a documented gap.
     """
 
     def __init__(self, config: SentenceTransformersConfig) -> None:
@@ -362,7 +362,7 @@ class OpenAiEmbeddingProvider:
     """Config plumbing for a cloud OpenAI-compatible embedding API.
 
     Cloud embedding APIs are explicitly not mandatory for v1
-    (PROJECT_SPEC.md section 5.1). `embed()`/`tokenize()` raise
+    (the design specification section 5.1). `embed()`/`tokenize()` raise
     `ProviderNotAvailableError`: no network call is ever made by this
     class in this release.
     """

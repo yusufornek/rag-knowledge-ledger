@@ -1,7 +1,7 @@
 """A content-addressed local artifact store.
 
 Stores arbitrary bytes under a caller-supplied root directory, addressed
-by their SHA-256 digest, following the relative layout PROJECT_SPEC.md
+by their SHA-256 digest, following the relative layout the design specification
 section 33.5 describes for portable manifest exports
 (``artifacts/<sha256>``). This is a plain local filesystem store: no
 signed URLs, no bucket credentials, no remote calls -- those concerns
@@ -9,7 +9,7 @@ belong to a future object-storage backend, not this module.
 
 Every hash a caller passes in is validated as a well-formed 64-character
 lowercase hex SHA-256 digest before it is used to build a filesystem
-path, which is both a basic path-traversal guard and, per PROJECT_SPEC.md
+path, which is both a basic path-traversal guard and, per the design specification
 section 33.5's "ZIP traversal guard" note for portable exports, the
 right layer to enforce it: a malformed or malicious digest string is
 rejected before it ever reaches `pathlib.Path`.

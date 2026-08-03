@@ -29,9 +29,7 @@ what is explicitly out of scope for v0.1.0.
 
 ## Status
 
-v0.1.1. See [IMPLEMENTATION_STATUS.md](IMPLEMENTATION_STATUS.md) for the
-full, requirement-by-requirement status against the project
-specification, and [CHANGELOG.md](CHANGELOG.md) for the release history.
+v0.1.1. See [CHANGELOG.md](CHANGELOG.md) for the release history.
 
 ## Features
 
@@ -315,8 +313,7 @@ production-sensitive.
 - **Live integration tests require Docker.** `tests/connectors/test_integration.py`
   exercises the Qdrant/pgvector connectors against real services started
   by `docker-compose.yml`; these are skipped by default
-  (`RAGLEDGER_IT=1` opts in) and were not run to produce this release
-  (see `docs/reviews/v0.1-security.md`).
+  (`RAGLEDGER_IT=1` opts in).
 - **Not a general RAG platform.** This tool does not parse queries,
   perform retrieval, generate text, or manage a vector index's schema.
   It is a lineage manifest format plus a read-only reconciliation

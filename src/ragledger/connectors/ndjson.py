@@ -39,7 +39,7 @@ air-gapped use).
 
 `NdjsonConnector` implements `VectorTargetConnector` by reading an
 already-written snapshot file back as if it were a live target: this
-is what lets reconciliation (a later milestone) and this milestone's
+is what lets reconciliation (a later release) and this release's
 own tests treat a committed NDJSON fixture exactly like a live Qdrant
 or pgvector connection, with no target-specific code path.
 """

@@ -1,4 +1,4 @@
-"""`ragledger snapshot`, per PROJECT_SPEC.md section 17.1 and 13.5.
+"""`ragledger snapshot`, per the design specification section 17.1 and 13.5.
 
 Streams a target's points to a `.ndjson.zst` snapshot file
 (`ragledger.connectors.ndjson.write_snapshot`), then reports the pass's
@@ -14,10 +14,9 @@ value; `--resume` reads that sidecar instead of requiring `--checkpoint`
 to be typed out by hand. This is verified correct against
 `NdjsonConnector` (its checkpoint format -- a canonical-JSON string key
 of `point_id` -- is exactly what `ragledger.connectors.ndjson` documents
-and this milestone's tests exercise). For Qdrant/pgvector the sidecar
+and this release's tests exercise). For Qdrant/pgvector the sidecar
 stores the observed `point_id` value directly as a best-effort
-checkpoint; see `docs/reviews/m4-status-notes.md` for why that is not
-verified against a live target in this milestone. A resumed run
+checkpoint. A resumed run
 overwrites `--output` with only the newly read tail, not a merge with
 the prior file -- operators who need one continuous file across resumed
 runs should use distinct `--output` paths per chunk.

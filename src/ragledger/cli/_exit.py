@@ -1,4 +1,4 @@
-"""CLI exit codes, per PROJECT_SPEC.md section 17.1's exit code table.
+"""CLI exit codes, per the design specification section 17.1's exit code table.
 
 A command body signals failure by raising `CliError` with the exit code
 the process should terminate with, rather than calling `sys.exit`/
@@ -45,7 +45,7 @@ EXIT_CANCELLED = 130
 class CliError(Exception):
     """Raised by a command body to terminate the process with a specific exit code.
 
-    ``message`` is written to stderr, never stdout -- PROJECT_SPEC.md
+    ``message`` is written to stderr, never stdout -- the design specification
     section 17.1: "JSON output stdout, logs stderr". Never construct
     this with a secret value interpolated into ``message``; nothing in
     this CLI ever echoes a resolved credential, private key, or DSN.

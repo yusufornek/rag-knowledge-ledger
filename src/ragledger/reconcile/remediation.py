@@ -1,4 +1,4 @@
-"""Remediation planning, per PROJECT_SPEC.md section 8.14 (FR-133..FR-135).
+"""Remediation planning, per the design specification section 8.14 (FR-133..FR-135).
 
 `build_remediation_plan` is a pure function of a finding list: it groups
 findings by (code, target, scope) and maps each group to one concrete,

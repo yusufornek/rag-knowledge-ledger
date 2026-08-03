@@ -1,8 +1,7 @@
 """Maps a loaded `RagledgerConfig` + CLI flags to `ragledger.pipeline.build.BuildConfig`.
 
 Two honest, documented simplifications versus a literal reading of
-PROJECT_SPEC.md section 17.3 (see `docs/reviews/m4-status-notes.md` for
-the full list):
+the design specification section 17.3:
 
 - `parser:` config is validated for shape but never forwarded as
   `BuildConfig.parser_config`: every native parser this release ships
@@ -69,7 +68,7 @@ def resolve_timing(epoch: int | None, *, force_reproducible: bool | None) -> Res
     """Resolve `created_at`/`build_id`/`reproducible` for one build.
 
     An explicit epoch (`--epoch` or `SOURCE_DATE_EPOCH`) makes the build
-    reproducible by default -- this is what PROJECT_SPEC.md section 7.2's
+    reproducible by default -- this is what the design specification section 7.2's
     "--reproducible mode" needs to actually produce a byte-identical
     manifest across runs, since `created_at` is otherwise real wall-clock
     time by construction (`ragledger.pipeline.build.BuildConfig`'s own
@@ -107,7 +106,7 @@ def make_embedding_provider(
             f"embedding.mode 'local' declares model {config.embedding.model!r}; this release's "
             "local embedding backend is the deterministic hash-projection reference embedder "
             "(ragledger.pipeline.embedding.DeterministicLocalEmbeddingProvider), not live "
-            f"{config.embedding.model!r} inference -- see IMPLEMENTATION_STATUS.md"
+            f"{config.embedding.model!r} inference"
         )
     return DeterministicLocalEmbeddingProvider(dimension=config.embedding.dimension, seed=0)
 
@@ -141,7 +140,7 @@ def build_config_from_ragledger_config(
         log(
             "governance.acl_required=true is recorded, but ragledger.yml has no ACL "
             "source-entry configuration surface in this release; no ACL assertions are "
-            "produced from it (see docs/reviews/m4-status-notes.md)"
+            "produced from it"
         )
 
     return BuildConfig(
