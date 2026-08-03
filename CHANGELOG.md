@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## 0.3.0 - 2026-08-04
+
+### Added
+
+- Built-in web console at `/ui`, served by the API process: overview
+  dashboard, source collections and scans, builds, manifests with
+  verify/sign actions, target registration, snapshots, reconciliations
+  with a findings table and remediation-plan preview, policy
+  management, and settings (API tokens, recent audit events, workspace
+  export download). Implemented as three hand-authored static files --
+  no bundler, no node toolchain, no third-party frontend dependency --
+  with all values rendered through `textContent`, a strict
+  `default-src 'none'` Content-Security-Policy, automatic light/dark
+  theming, and live SSE-driven refresh for in-flight builds.
+- `GET /workspaces/{id}/jobs`: newest-first job listing for dashboards.
+- The root path now redirects to the web console.
+
 ## 0.2.0 - 2026-08-04
 
 ### Added

@@ -570,6 +570,27 @@ def cancel_build(
 # --------------------------------------------------------------------------
 
 
+@pipeline_router.get("/workspaces/{workspace_id}/jobs", response_model=list[JobOut])
+def list_jobs(
+    workspace_id: uuid.UUID,
+    db: DbSession,
+    auth: Annotated[AuthContext, require_scope("builds")],
+    limit: Annotated[int, Query(ge=1, le=200)] = 50,
+) -> list[JobOut]:
+    """Newest-first jobs across all types, for dashboards and debugging."""
+    rows = (
+        db.execute(
+            select(Job)
+            .where(Job.workspace_id == auth.workspace_id)
+            .order_by(Job.created_at.desc())
+            .limit(limit)
+        )
+        .scalars()
+        .all()
+    )
+    return [_job_out(row) for row in rows]
+
+
 @pipeline_router.get("/workspaces/{workspace_id}/jobs/{job_id}", response_model=JobOut)
 def get_job(
     workspace_id: uuid.UUID,

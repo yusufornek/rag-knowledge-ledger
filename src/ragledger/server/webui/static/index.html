@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>RAG Knowledge Ledger</title>
+  <link rel="stylesheet" href="/ui/style.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <div id="login-view" hidden>
+    <main class="login-card" aria-labelledby="login-title">
+      <h1 id="login-title">RAG Knowledge Ledger</h1>
+      <p>
+        Paste a workspace API token to open the console. The token is
+        kept in this tab's session storage only and sent as a bearer
+        header to this server's own API.
+      </p>
+      <form id="login-form">
+        <label for="login-token">API token</label>
+        <input id="login-token" type="password" autocomplete="off" required
+               spellcheck="false" placeholder="rlk_...">
+        <button type="submit">Open console</button>
+      </form>
+      <p id="login-error" class="error" role="alert" hidden></p>
+      <details>
+        <summary>No token yet?</summary>
+        <p>
+          On a fresh instance, bootstrap the first workspace and admin
+          token from a terminal, then paste the returned token above:
+        </p>
+        <pre>curl -s -X POST <span id="login-origin"></span>/api/v1/auth/bootstrap \
+  -H 'Content-Type: application/json' \
+  -d '{"email":"you@example.com","workspace_slug":"main","workspace_name":"Main"}'</pre>
+      </details>
+    </main>
+  </div>
+
+  <div id="app-view" hidden>
+    <header class="topbar">
+      <span class="brand">RAG Knowledge Ledger</span>
+      <span id="workspace-label" class="workspace-label"></span>
+      <button id="logout-button" class="ghost" type="button">Disconnect</button>
+    </header>
+    <div class="layout">
+      <nav class="sidenav" aria-label="Primary">
+        <a href="#/overview">Overview</a>
+        <a href="#/sources">Sources</a>
+        <a href="#/builds">Builds</a>
+        <a href="#/manifests">Manifests</a>
+        <a href="#/targets">Targets</a>
+        <a href="#/snapshots">Snapshots</a>
+        <a href="#/reconciliations">Reconciliations</a>
+        <a href="#/policies">Policies</a>
+        <a href="#/settings">Settings</a>
+      </nav>
+      <main id="main" class="content" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <script src="/ui/app.js"></script>
+</body>
+</html>

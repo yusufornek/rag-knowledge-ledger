@@ -29,7 +29,7 @@ what is explicitly out of scope for v0.1.0.
 
 ## Status
 
-v0.2.0. See [CHANGELOG.md](CHANGELOG.md) for the release history.
+v0.3.0. See [CHANGELOG.md](CHANGELOG.md) for the release history.
 
 ## Features
 
@@ -78,6 +78,15 @@ What this release ships, as a CLI (`ragledger ...`), a Python library
   secret-free workspace export. RFC 9457 problem responses throughout,
   and an append-only audit trail written in the same transaction as
   every mutation.
+- **Web console** (v0.3.0): a built-in single-page UI at `/ui`,
+  served by the API process itself -- overview dashboard, sources,
+  builds, manifests (verify/sign), targets, snapshots,
+  reconciliations with findings and remediation preview, policies,
+  and settings (tokens, audit trail, workspace export). Written as
+  three hand-authored static files with no bundler, no node
+  toolchain, and no third-party frontend dependency; every value is
+  rendered through `textContent`, and the pages ship with a strict
+  `default-src 'none'` Content-Security-Policy.
 
 ## Install
 
@@ -254,7 +263,8 @@ src/ragledger/
   server/      The optional FastAPI server: settings, SQLAlchemy 2.0
                persistence with Alembic migrations, API-token auth and
                credential encryption, the DB job queue and handlers,
-               the /api/v1 routes, and the append-only audit log.
+               the /api/v1 routes, the append-only audit log, and the
+               built-in web console (server/webui).
 ```
 
 The CLI and library run standalone with no services at all. The server
@@ -286,7 +296,8 @@ returns `202` with a job id; the API process executes jobs in-process,
 and `ragledger server worker` runs them in a dedicated process instead
 when preferred -- both lease from the same Postgres-backed queue, so
 whichever gets there first wins. Interactive API docs are served at
-`/docs`.
+`/docs`, and the built-in web console at `/ui` (paste the bootstrap
+token to open it).
 
 ## Determinism and security notes
 
@@ -345,10 +356,15 @@ production-sensitive.
   manifest is constructed for the reconciliation engine's own test
   suite, which is fully implemented and tested against exactly that
   shape).
-- **No web UI.** The server exposes a complete HTTP API (with
-  interactive OpenAPI docs at `/docs`), but the browser-based lineage
-  explorer described in the project specification is not part of this
-  release.
+- **The web console is deliberately minimal.** It covers every
+  navigation area (overview through settings) with live data and
+  actions, but it is a dependency-free static page, not the full
+  product surface the design specification sketches: there is no
+  graph-based lineage explorer (findings link source/chunk ids in
+  tables instead), no build-cost estimation wizard, and no structural
+  manifest diff view. The API token is held in the tab's
+  `sessionStorage`; treat the console as an operator tool on a trusted
+  network, not a public-facing product.
 - **Job execution is polling-based.** The job queue's source of truth
   is Postgres (`FOR UPDATE SKIP LOCKED` leasing); a dedicated worker
   polls it rather than being woken by a Redis/Dramatiq message

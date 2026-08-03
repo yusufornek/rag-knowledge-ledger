@@ -183,6 +183,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     from ragledger.server.api.pipeline_routes import pipeline_router
     from ragledger.server.api.problems import install_problem_handlers
     from ragledger.server.api.reconcile_routes import reconcile_router
+    from ragledger.server.webui import webui_router
 
     install_problem_handlers(app)
     app.include_router(api_router, prefix="/api/v1")
@@ -190,6 +191,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(manifest_router, prefix="/api/v1")
     app.include_router(reconcile_router, prefix="/api/v1")
     app.include_router(events_router, prefix="/api/v1")
+    app.include_router(webui_router)
 
     @app.get("/healthz")
     def healthz(db: Session = Depends(get_db_session)) -> dict[str, Any]:  # noqa: B008
