@@ -33,6 +33,7 @@ import hashlib
 import hmac
 import re
 import signal
+import threading
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -276,26 +277,52 @@ def _run_with_timeout(
 ) -> list[RawFinding]:
     """Run `func`, aborting with `RegexTimeoutError` after `timeout_seconds`.
 
-    POSIX-only (`SIGALRM`-based, via `signal.setitimer` for sub-second
-    granularity); on platforms without `SIGALRM` this degrades to
-    running unbounded, since there is no portable stdlib-only
-    alternative. This is the enforcement mechanism behind FR-054's
-    "tested regex timeout/bounds" for custom, operator-authored
-    recognizer patterns.
+    On the main thread of a POSIX interpreter this is `SIGALRM`-based
+    (via `signal.setitimer`, for sub-second granularity) and genuinely
+    interrupts the regex mid-evaluation. Off the main thread -- for
+    example inside a server worker or FastAPI background task, where
+    `signal.signal` raises `ValueError` -- the scan runs in a helper
+    thread and is *waited on* for `timeout_seconds`: the caller still
+    gets a bounded wall-clock guarantee and a `RegexTimeoutError`, but a
+    truly runaway pattern's thread cannot be killed and is abandoned to
+    finish (or spin) in the background. On platforms with neither
+    `SIGALRM` nor threads this degrades to running unbounded. This is
+    the enforcement mechanism behind FR-054's "tested regex
+    timeout/bounds" for custom, operator-authored recognizer patterns.
     """
-    if not hasattr(signal, "SIGALRM") or timeout_seconds <= 0:
+    if timeout_seconds <= 0:
         return func()
 
-    def _on_alarm(signum: int, frame: Any) -> None:
+    if hasattr(signal, "SIGALRM") and threading.current_thread() is threading.main_thread():
+
+        def _on_alarm(signum: int, frame: Any) -> None:
+            raise RegexTimeoutError(f"regex evaluation exceeded {timeout_seconds}s timeout")
+
+        previous_handler = signal.signal(signal.SIGALRM, _on_alarm)
+        signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
+        try:
+            return func()
+        finally:
+            signal.setitimer(signal.ITIMER_REAL, 0)
+            signal.signal(signal.SIGALRM, previous_handler)
+
+    result: list[list[RawFinding]] = []
+    error: list[BaseException] = []
+
+    def _target() -> None:
+        try:
+            result.append(func())
+        except BaseException as exc:  # noqa: BLE001 -- re-raised on the caller's thread below
+            error.append(exc)
+
+    worker = threading.Thread(target=_target, daemon=True)
+    worker.start()
+    worker.join(timeout_seconds)
+    if worker.is_alive():
         raise RegexTimeoutError(f"regex evaluation exceeded {timeout_seconds}s timeout")
-
-    previous_handler = signal.signal(signal.SIGALRM, _on_alarm)
-    signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
-    try:
-        return func()
-    finally:
-        signal.setitimer(signal.ITIMER_REAL, 0)
-        signal.signal(signal.SIGALRM, previous_handler)
+    if error:
+        raise error[0]
+    return result[0]
 
 
 def _scan_one(recognizer: Recognizer, text: str) -> list[RawFinding]:

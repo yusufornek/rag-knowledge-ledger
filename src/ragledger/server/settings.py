@@ -114,6 +114,12 @@ class Settings(BaseSettings):
     allow_private_targets: bool = Field(default=False, alias="ALLOW_PRIVATE_TARGETS")
     private_target_cidrs: str = Field(default="", alias="PRIVATE_TARGET_CIDRS")
 
+    # -- Source roots the server may scan (not in section 41's list; wave B
+    # interpretation, see IMPLEMENTATION_STATUS.md: the CLI reads whatever
+    # path its operator passes, but a server accepting source-collection
+    # roots over HTTP needs an explicit bound on what the API can reach) --
+    source_root_allowed_bases: str = Field(default="", alias="SOURCE_ROOT_ALLOWED_BASES")
+
     # -- Manifest / reconciliation limits -----------------------------------------
     manifest_inline_records_max: int = Field(
         default=50_000, gt=0, alias="MANIFEST_INLINE_RECORDS_MAX"
@@ -252,6 +258,22 @@ class Settings(BaseSettings):
         if self.encryption_key_current_id is None:
             raise RuntimeError("no APP_ENCRYPTION_KEY_V<n> environment variable is configured")
         return self.encryption_key_current_id, self.encryption_keys[self.encryption_key_current_id]
+
+    def is_source_root_allowed(self, candidate: Path) -> bool:
+        """Whether the API may accept ``candidate`` as a source-collection root.
+
+        With `SOURCE_ROOT_ALLOWED_BASES` configured (CSV of absolute
+        directories), the resolved candidate must sit under one of them.
+        With it unset, any existing directory is accepted in
+        development/test, and nothing is accepted in production -- a
+        production server must state explicitly what the HTTP API is
+        allowed to read.
+        """
+        resolved = candidate.resolve()
+        bases = [Path(entry) for entry in _split_csv(self.source_root_allowed_bases)]
+        if not bases:
+            return self.app_env != "production"
+        return any(resolved.is_relative_to(base.resolve()) for base in bases)
 
     def masked_dict(self) -> dict[str, object]:
         """A safe-to-log view of this configuration: secrets replaced with a fixed mask."""
